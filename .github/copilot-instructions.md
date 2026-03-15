@@ -42,14 +42,61 @@ Reviewer approves → Tester signs off → issue moved to Done
 
 ---
 
-## 4. Role Responsibilities (Summary)
+## 4. Role Responsibilities
 
-| Role | Owns | Does NOT do |
-|---|---|---|
-| **PM** | Issue backlog, acceptance criteria, content specs, UX review, open questions | Implementation, tests |
-| **Architect** | System design, API contracts, DB schemas, security review | Implementation, test execution |
-| **Dev** | Feature implementation, bug fixes, PRs | Test execution, product decisions |
-| **Tester** | Test plans, test execution, bug reports, QA sign-off | Source code changes, product decisions |
+### Product Manager (`role:pm`)
+The PM owns the product — what it is, who it serves, and whether it is working. All product decisions flow through the PM.
+
+- **Product vision & strategy** — defines and maintains the product direction; ensures every feature maps to a user need from the PRD
+- **Market analysis** — researches target markets and user personas; validates assumptions through user interviews and competitive analysis
+- **PRD ownership** — authors and versions [`docs/PRD-Product-Selection-Module.md`](../docs/PRD-Product-Selection-Module.md); every PRD change gets a version bump and a summary comment on the associated issue
+- **Issue backlog** — creates, grooms, and prioritizes all GitHub Issues; writes acceptance criteria before any Dev or Tester work begins
+- **UX review** — reviews implemented screens against PRD specs; raises new issues for any gap
+- **Open questions** — owns all `type:question` issues; resolves blockers within 1 business day
+- **Product improvement** — collects user feedback post-launch; translates it into new PRD sections and `type:feature` issues
+
+> PM does **not** write code, run tests, or make architectural decisions.
+
+---
+
+### Architect (`role:architect`)
+The Architect owns the technical design — how the system is built, how components connect, and where the boundaries are.
+
+- **System design** — produces architecture decision records (ADRs) and sequence diagrams; committed to `/docs/architecture/`
+- **API contracts** — defines request/response schemas for all service boundaries before Dev implements them
+- **Data schemas** — designs the database schema (PostgreSQL) and cache strategy (Redis)
+- **Security design** — owns the threat model; reviews every feature that touches credentials, data retention, or external APIs
+- **Technology decisions** — selects frameworks, libraries, and infrastructure; documents rationale in ADRs
+- **Dev unblocking** — resolves technical ambiguities that block Dev; closes design issues with a decision comment before handing off to Dev
+
+> Architect does **not** write production features or execute tests.
+
+---
+
+### Developer (`role:dev`)
+The Dev owns the implementation — turning design specs and acceptance criteria into working, merged code.
+
+- **Feature implementation** — builds features described in `role:dev` issues, working from AC written by PM and specs written by Architect
+- **Function-level design** — makes implementation-level decisions (data structures, algorithms, component structure) within the architecture set by the Architect
+- **Bug fixes** — owns all `type:bug` issues assigned to them; reproduces, fixes, and links the fix PR to the bug issue
+- **Code review** — reviews PRs from other Devs; requests Architect review for any PR touching security boundaries or API contracts
+- **Integration** — ensures new code integrates cleanly with existing modules; does not break other features
+
+> Dev does **not** change acceptance criteria, make product decisions, or self-close issues without Tester sign-off.
+
+---
+
+### Tester (`role:tester`)
+The Tester owns quality — ensuring every feature meets its acceptance criteria and the product is safe to ship.
+
+- **Test planning** — writes a `type:test` issue with a full test plan for every epic *before* implementation is complete
+- **Test execution** — runs test cases once Dev signals a feature is merged; logs results on the feature issue
+- **Bug reporting** — raises `type:bug` issues for every failure found; includes steps to reproduce, expected vs actual behaviour, and environment details
+- **QA sign-off** — posts `✅ QA passed` on the feature issue when all AC pass; this is the gate for moving an issue to `Done`
+- **Non-functional testing** — owns performance benchmarks, security verification, and accessibility audits
+- **Release gate** — no milestone is closed until all P0 and P1 test issues in that milestone are `Done`
+
+> Tester does **not** modify source code or change product requirements.
 
 ---
 
