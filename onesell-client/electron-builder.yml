@@ -1,0 +1,30 @@
+appId: com.onesell.scout
+productName: OneSell Scout
+copyright: Copyright © 2026 OneSell
+
+directories:
+  output: dist/electron
+  buildResources: build
+
+files:
+  - dist/main/**
+  - dist/renderer/**
+  - package.json
+
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+
+mac:
+  target:
+    - target: dmg
+      arch:
+        - x64
+        - arm64
+  category: public.app-category.productivity
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
