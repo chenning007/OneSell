@@ -6,6 +6,7 @@ export const alibabaScript: ExtractionScript = {
   platformId: 'alibaba',
   marketId: 'us',
   version: '1.0.0',
+  homeUrl: 'https://www.alibaba.com',
 
   getNavigationTargets(keyword: string, _market: MarketContext): string[] {
     return [

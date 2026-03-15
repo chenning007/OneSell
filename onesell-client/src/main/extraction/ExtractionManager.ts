@@ -29,6 +29,12 @@ export class ExtractionManager {
         },
       });
       this.views.set(platformId, view);
+
+      // Navigate to the platform's home/login page on first open
+      const script = registry.get(platformId);
+      if (script?.homeUrl) {
+        void view.webContents.loadURL(script.homeUrl);
+      }
     }
     this.mainWindow.addBrowserView(view);
     this.sizeView(view);

@@ -48,6 +48,13 @@ export interface ExtractionScript {
   readonly marketId: string;
   readonly version: string; // Semver — increment on any DOM structure change
 
+  /**
+   * URL loaded when the user clicks "Connect" for this platform.
+   * For auth-required platforms: login/home page so the user can sign in.
+   * For public platforms: the search entry point.
+   */
+  readonly homeUrl: string;
+
   /** URLs the BrowserView should navigate to for a given keyword + market. */
   getNavigationTargets(keyword: string, market: MarketContext): string[];
 

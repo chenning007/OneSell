@@ -6,6 +6,7 @@ export const amazonUsScript: ExtractionScript = {
   platformId: 'amazon-us',
   marketId: 'us',
   version: '1.0.0',
+  homeUrl: 'https://www.amazon.com',
 
   getNavigationTargets(keyword: string, _market: MarketContext): string[] {
     return [

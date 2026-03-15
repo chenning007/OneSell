@@ -16,6 +16,7 @@ export const googleTrendsScript: ExtractionScript = {
   platformId: 'google-trends',
   marketId: 'us',
   version: '1.0.0',
+  homeUrl: 'https://trends.google.com',
 
   getNavigationTargets(keyword: string, market: MarketContext): string[] {
     const geo = GEO_MAP[market.marketId] ?? 'US';
