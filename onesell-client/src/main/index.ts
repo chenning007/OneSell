@@ -1,6 +1,7 @@
 import { app, BrowserWindow } from 'electron';
 import path from 'path';
 import { ExtractionManager } from './extraction/ExtractionManager.js';
+import { PayloadBuilder } from './extraction/PayloadBuilder.js';
 import { registerIpcHandlers } from './ipc/handlers.js';
 
 const isDev = process.env['NODE_ENV'] === 'development';
@@ -33,7 +34,8 @@ app.whenReady().then(() => {
   const win = createWindow();
 
   const manager = new ExtractionManager(win);
-  registerIpcHandlers(win, manager);
+  const payloadBuilder = new PayloadBuilder();
+  registerIpcHandlers(win, manager, payloadBuilder);
 
   win.on('closed', () => {
     manager.destroyAll();

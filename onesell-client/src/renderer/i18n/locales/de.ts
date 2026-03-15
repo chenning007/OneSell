@@ -90,6 +90,16 @@ const de = {
       extracting: 'Wird extrahiert…',
     },
   },
+  progress: {
+    heading: 'Daten werden extrahiert…',
+    waiting: 'Wartend',
+    extracting: 'Wird extrahiert…',
+    done: 'Fertig',
+    error: 'Extraktion fehlgeschlagen',
+    cancel: 'Abbrechen',
+    analyzeNow: 'Jetzt analysieren',
+    productsFound: '{{count}} Produkte gefunden',
+  },
 } as const;
 
 export default de;

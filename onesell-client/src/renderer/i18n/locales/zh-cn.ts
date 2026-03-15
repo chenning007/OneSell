@@ -90,6 +90,16 @@ const zhCn = {
       extracting: '采集中…',
     },
   },
+  progress: {
+    heading: '正在提取数据…',
+    waiting: '等待中',
+    extracting: '提取中…',
+    done: '完成',
+    error: '提取失败',
+    cancel: '取消',
+    analyzeNow: '立即分析',
+    productsFound: '找到 {{count}} 个商品',
+  },
 } as const;
 
 export default zhCn;

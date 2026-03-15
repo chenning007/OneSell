@@ -90,6 +90,16 @@ const ja = {
       extracting: '取得中…',
     },
   },
+  progress: {
+    heading: 'データを抽出中…',
+    waiting: '待機中',
+    extracting: '抽出中…',
+    done: '完了',
+    error: '抽出に失敗しました',
+    cancel: 'キャンセル',
+    analyzeNow: '今すぐ分析',
+    productsFound: '{{count}} 件の商品が見つかりました',
+  },
 } as const;
 
 export default ja;

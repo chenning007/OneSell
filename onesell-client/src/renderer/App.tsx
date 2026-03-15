@@ -3,6 +3,7 @@ import { useWizardStore } from './store/wizardStore.js';
 import MarketSelection from './modules/wizard/MarketSelection.js';
 import Wizard from './modules/wizard/Wizard.js';
 import DataSourceConnect from './modules/data-sources/DataSourceConnect.js';
+import ProgressScreen from './modules/progress/ProgressScreen.js';
 
 export default function App(): React.ReactElement {
   const { currentStep } = useWizardStore();
@@ -17,6 +18,10 @@ export default function App(): React.ReactElement {
 
   if (currentStep === 7) {
     return <DataSourceConnect />;
+  }
+
+  if (currentStep === 8) {
+    return <ProgressScreen />;
   }
 
   return (

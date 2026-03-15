@@ -1,4 +1,5 @@
 import type { RawPlatformData } from '../shared/types/ExtractionScript.js';
+import type { UserPreferences, AnalysisPayload } from '../shared/types/AnalysisPayload.js';
 
 /**
  * Type declaration for electronAPI exposed via contextBridge in preload.ts.
@@ -13,6 +14,13 @@ declare global {
         hideView(platformId: string): Promise<void>;
         runExtraction(platformId: string): Promise<RawPlatformData | null>;
         getCurrentUrl(platformId: string): Promise<string>;
+      };
+      payload: {
+        build(
+          sessionId: string,
+          preferences: UserPreferences,
+          rawResults: Record<string, RawPlatformData[]>
+        ): Promise<AnalysisPayload>;
       };
     };
   }

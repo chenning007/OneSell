@@ -90,6 +90,16 @@ const en = {
       extracting: 'Extracting…',
     },
   },
+  progress: {
+    heading: 'Extracting data…',
+    waiting: 'Waiting',
+    extracting: 'Extracting…',
+    done: 'Done',
+    error: 'Extraction failed',
+    cancel: 'Cancel',
+    analyzeNow: 'Analyze Now',
+    productsFound: '{{count}} products found',
+  },
 } as const;
 
 export default en;
