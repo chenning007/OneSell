@@ -54,6 +54,9 @@ The PM owns the product — what it is, who it serves, and whether it is working
 - **UX review** — reviews implemented screens against PRD specs; raises new issues for any gap
 - **Open questions** — owns all `type:question` issues; resolves blockers within 1 business day
 - **Product improvement** — collects user feedback post-launch; translates it into new PRD sections and `type:feature` issues
+- **PRD-driven sprint planning** — before every milestone begins, PM reads the current PRD version, identifies all work items implied by that version, creates the corresponding GitHub Issues with full acceptance criteria, assigns them to the correct roles, and moves them to `Ready`; no role should ever be waiting for work
+- **Task assignment** — PM matches every issue to a specific assignee based on role, capacity, and dependency order; unassigned issues in `Ready` are a PM failure
+- **Release management** — PM owns the branch and tag strategy for every shipment; see Section 9
 
 > PM does **not** write code, run tests, or make architectural decisions.
 
@@ -137,7 +140,86 @@ Every PR must include `Closes #<issue-number>` in the description.
 
 ---
 
-## 8. When You Are Blocked
+## 10. When You Are Blocked
+
+Add the `blocked` label to your issue, post a comment explaining the blocker, and mention `@PM`. PM resolves blockers within 1 business day. Do not skip ahead to other work without logging the block first.
+
+---
+
+## 9. Release Management (PM-owned)
+
+### PRD Version → Sprint Plan
+
+Every time the PRD is updated, the PM follows this sequence before any Dev or Tester work begins:
+
+```
+PM reads new PRD version
+        ↓
+PM identifies all new or changed requirements
+        ↓
+PM creates / updates GitHub Issues for each item
+  (title, acceptance criteria, labels, milestone, assignee)
+        ↓
+PM moves issues to Ready
+        ↓
+Roles pick up issues — work begins
+```
+
+A PRD version bump with no corresponding new issues is incomplete. The issues **are** the sprint plan.
+
+### Branch Strategy for Shipment
+
+```
+main          ← always reflects the latest released version; protected
+release/vX.Y  ← cut by PM when a milestone is ready to ship
+hotfix/<#>    ← cut from main for urgent post-release fixes only
+```
+
+**PM is the only person who creates `release/*` and `hotfix/*` branches.** Devs work exclusively on `feature/`, `fix/`, `spike/`, and `docs/` branches.
+
+### Milestone → Release Flow
+
+```
+All milestone issues reach Done
+        ↓
+Tester confirms: all P0/P1 test issues in milestone are ✅ QA passed
+        ↓
+PM cuts release branch:  git checkout -b release/vX.Y
+        ↓
+PM creates GitHub Release with tag vX.Y and release notes
+  (summarises what shipped, links milestone, lists closed issues)
+        ↓
+PM closes the milestone on GitHub
+        ↓
+PM merges release/vX.Y back into main
+        ↓
+🚢 Shipped
+```
+
+### Release Notes (PM authors)
+
+Every GitHub Release must include:
+- **What's new** — plain-language summary of features shipped (maps to PRD sections)
+- **PRD version** — which PRD version this release implements
+- **Issues closed** — linked list of all issues in the milestone
+- **Known limitations** — any P2/P3 issues deliberately deferred
+- **Upgrade notes** — any breaking changes or migration steps (if applicable)
+
+### Hotfix Process
+
+For a critical bug found after release:
+
+1. Tester raises a `type:bug P0` issue
+2. PM creates `hotfix/<issue#>-description` branch from `main`
+3. Dev fixes on that branch; Tester verifies
+4. PM merges hotfix to `main`, tags as `vX.Y.Z`, creates a GitHub Release
+5. Issue closed with `✅ QA passed` comment
+
+**No hotfix ships without Tester sign-off**, even for P0 bugs.
+
+---
+
+## 10. When You Are Blocked
 
 Add the `blocked` label to your issue, post a comment explaining the blocker, and mention `@PM`. PM resolves blockers within 1 business day. Do not skip ahead to other work without logging the block first.
 
