@@ -1,5 +1,6 @@
 import { app, BrowserWindow } from 'electron';
 import path from 'path';
+import os from 'os';
 import { ExtractionManager } from './extraction/ExtractionManager.js';
 import { PayloadBuilder } from './extraction/PayloadBuilder.js';
 import { registerIpcHandlers } from './ipc/handlers.js';
@@ -9,6 +10,14 @@ import './extraction/scripts/google-trends/index.js';
 import './extraction/scripts/alibaba/index.js';
 
 const isDev = process.env['NODE_ENV'] === 'development';
+
+// Point user data to a writable temp location to avoid GPU cache permission errors
+// on machines where the default AppData path is restricted.
+app.setPath('userData', path.join(os.tmpdir(), 'onesell-scout'));
+
+// Suppress GPU cache errors on restricted Windows environments
+app.commandLine.appendSwitch('disable-gpu-cache');
+app.commandLine.appendSwitch('disable-gpu-shader-disk-cache');
 
 function createWindow(): BrowserWindow {
   const win = new BrowserWindow({
