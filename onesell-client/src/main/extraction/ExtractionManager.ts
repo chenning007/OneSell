@@ -17,8 +17,10 @@ export class ExtractionManager {
 
   /** Create (or reuse) an isolated BrowserView for a platform and show it. */
   openView(platformId: string): void {
+    console.log('[ExtractionManager] openView called for:', platformId);
     let view = this.views.get(platformId);
     if (!view) {
+      console.log('[ExtractionManager] Creating new BrowserView for:', platformId);
       view = new BrowserView({
         webPreferences: {
           nodeIntegration: false,
@@ -32,12 +34,17 @@ export class ExtractionManager {
 
       // Navigate to the platform's home/login page on first open
       const script = registry.get(platformId);
+      console.log('[ExtractionManager] Script found for', platformId, ':', script ? `homeUrl=${script.homeUrl}` : 'NOT FOUND in registry');
       if (script?.homeUrl) {
+        console.log('[ExtractionManager] Loading URL:', script.homeUrl);
         void view.webContents.loadURL(script.homeUrl);
       }
+    } else {
+      console.log('[ExtractionManager] Reusing existing BrowserView for:', platformId);
     }
     this.mainWindow.addBrowserView(view);
     this.sizeView(view);
+    console.log('[ExtractionManager] BrowserView added to main window for:', platformId);
   }
 
   /** Hide the BrowserView while keeping the session (cookies) alive. */

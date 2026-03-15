@@ -69,12 +69,15 @@ export default function DataSourceConnect(): React.ReactElement {
 
   const handleConnect = useCallback(
     async (platformId: string) => {
+      console.log('[DataSourceConnect] Connect clicked for:', platformId);
       try {
+        console.log('[DataSourceConnect] Calling electronAPI.extraction.openView...');
         await window.electronAPI.extraction.openView(platformId);
+        console.log('[DataSourceConnect] openView resolved OK for:', platformId);
         setStatus(platformId, 'connected');
         startPolling(platformId);
       } catch (err) {
-        console.error('Failed to open view for', platformId, err);
+        console.error('[DataSourceConnect] openView FAILED for', platformId, err);
       }
     },
     [setStatus, startPolling],

@@ -8,6 +8,7 @@ export class ExtractionScriptRegistry {
   private scripts = new Map<string, ExtractionScript>();
 
   register(script: ExtractionScript): void {
+    console.log('[Registry] Registering script:', script.platformId, 'homeUrl:', script.homeUrl);
     this.scripts.set(script.platformId, script);
   }
 

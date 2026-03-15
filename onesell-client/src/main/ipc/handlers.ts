@@ -28,8 +28,16 @@ export function registerIpcHandlers(
   payloadBuilder?: PayloadBuilder,
 ): void {
   ipcMain.handle('extraction:open-view', (_event, platformId: unknown) => {
-    const id = validatePlatformId(platformId);
-    manager.openView(id);
+    console.log('[IPC] extraction:open-view received, platformId:', platformId);
+    try {
+      const id = validatePlatformId(platformId);
+      console.log('[IPC] platformId validated:', id);
+      manager.openView(id);
+      console.log('[IPC] openView called OK for:', id);
+    } catch (err) {
+      console.error('[IPC] extraction:open-view ERROR:', err);
+      throw err;
+    }
   });
 
   ipcMain.handle('extraction:close-view', (_event, platformId: unknown) => {

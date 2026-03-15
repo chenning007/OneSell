@@ -8,6 +8,9 @@ import { registerIpcHandlers } from './ipc/handlers.js';
 import './extraction/scripts/amazon-us/index.js';
 import './extraction/scripts/google-trends/index.js';
 import './extraction/scripts/alibaba/index.js';
+import './extraction/scripts/ebay-us/index.js';
+import './extraction/scripts/etsy/index.js';
+import './extraction/scripts/tiktok-shop-us/index.js';
 
 const isDev = process.env['NODE_ENV'] === 'development';
 
@@ -35,9 +38,12 @@ function createWindow(): BrowserWindow {
   if (isDev) {
     // Development: load from Vite dev server (hot-reload)
     void win.loadURL('http://localhost:5173');
+    win.webContents.openDevTools();
   } else {
     // Production: load built renderer
     void win.loadFile(path.join(__dirname, '../renderer/index.html'));
+    // Open DevTools in production temporarily for debugging
+    win.webContents.openDevTools();
   }
 
   return win;

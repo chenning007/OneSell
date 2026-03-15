@@ -4,30 +4,35 @@ import MarketSelection from './modules/wizard/MarketSelection.js';
 import Wizard from './modules/wizard/Wizard.js';
 import DataSourceConnect from './modules/data-sources/DataSourceConnect.js';
 import ProgressScreen from './modules/progress/ProgressScreen.js';
+import DebugPanel from './components/DebugPanel.js';
 
 export default function App(): React.ReactElement {
   const { currentStep } = useWizardStore();
 
+  let content: React.ReactElement;
+
   if (currentStep === 1) {
-    return <MarketSelection />;
-  }
-
-  if (currentStep >= 2 && currentStep <= 6) {
-    return <Wizard />;
-  }
-
-  if (currentStep === 7) {
-    return <DataSourceConnect />;
-  }
-
-  if (currentStep === 8) {
-    return <ProgressScreen />;
+    content = <MarketSelection />;
+  } else if (currentStep >= 2 && currentStep <= 6) {
+    content = <Wizard />;
+  } else if (currentStep === 7) {
+    content = <DataSourceConnect />;
+  } else if (currentStep === 8) {
+    content = <ProgressScreen />;
+  } else {
+    content = (
+      <div style={{ fontFamily: 'system-ui, sans-serif', textAlign: 'center', paddingTop: '20vh' }}>
+        <h2>Analysis starting...</h2>
+        <p>Please wait while we analyze your selections.</p>
+      </div>
+    );
   }
 
   return (
-    <div style={{ fontFamily: 'system-ui, sans-serif', textAlign: 'center', paddingTop: '20vh' }}>
-      <h2>Analysis starting...</h2>
-      <p>Please wait while we analyze your selections.</p>
-    </div>
+    <>
+      {/* Add bottom padding so content isn't hidden behind debug panel */}
+      <div style={{ paddingBottom: '220px' }}>{content}</div>
+      <DebugPanel />
+    </>
   );
 }
