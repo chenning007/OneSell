@@ -346,19 +346,202 @@ All issues must include:
 
 ## 8. Branching Strategy
 
+### 8.1 Branch Model Overview
+
 ```
-main                    ← always deployable; protected branch
-  └── feature/<#>-name  ← one branch per issue; opened by Dev
-  └── fix/<#>-name      ← for bug fix issues
-  └── spike/<#>-name    ← for Architect prototype/research
-  └── docs/<#>-name     ← for documentation-only changes
+main
+  │
+  ├── feature/<issue#>-short-name     ← Dev: one branch per feature issue
+  ├── fix/<issue#>-short-name         ← Dev: one branch per bug fix issue
+  ├── spike/<issue#>-short-name       ← Architect: research / prototype
+  ├── docs/<issue#>-short-name        ← Any role: documentation only
+  │
+  ├── release/vX.Y                    ← PM only: created when milestone is ready to ship
+  └── hotfix/<issue#>-short-name      ← PM only: created from main for post-release P0 fixes
 ```
 
-**Branch rules:**
-- `main` is protected — no direct pushes; all changes via PR
-- PR requires at least **1 approving review** before merge
-- PRs must reference the Issue number (`Closes #XX`)
-- Delete branch after merge
+**`main` is the only permanent branch.** Every other branch is temporary — created for one issue, merged via PR, and deleted automatically on merge.
+
+---
+
+### 8.2 Branch Naming Rules
+
+| Branch Type | Pattern | Example | Who Creates |
+|---|---|---|---|
+| Feature | `feature/<issue#>-short-name` | `feature/11-market-selection-screen` | Dev |
+| Bug fix | `fix/<issue#>-short-name` | `fix/47-wizard-language-switch-bug` | Dev |
+| Spike / research | `spike/<issue#>-short-name` | `spike/3-extraction-architecture` | Architect |
+| Docs | `docs/<issue#>-short-name` | `docs/7-kpi-instrumentation-spec` | Any role |
+| Release | `release/vX.Y` | `release/v1.0` | **PM only** |
+| Hotfix | `hotfix/<issue#>-short-name` | `hotfix/99-credential-leak-fix` | **PM only** |
+
+Rules:
+- Always include the **issue number** — this links the branch to its work item
+- Use **kebab-case** for the name portion, keep it short (3–5 words)
+- Never include your username, dates, or version numbers in `feature/` or `fix/` branches
+
+---
+
+### 8.3 How Dev Creates and Works on a Branch
+
+When you pick up a `role:dev` issue from `Ready`:
+
+```bash
+# 1. Make sure you are on main and it is up to date
+git checkout main
+git pull origin main
+
+# 2. Create your branch — use the exact issue number
+git checkout -b feature/11-market-selection-screen
+
+# 3. Do your work. Commit often with clear messages:
+git commit -m "feat(wizard): render 7 market tiles with flag icons"
+git commit -m "feat(wizard): wire market selection to i18n context"
+
+# 4. Push your branch and open a PR when ready
+git push -u origin feature/11-market-selection-screen
+```
+
+Post a comment on the GitHub Issue with your branch name when you start: `Working on branch feature/11-market-selection-screen`.
+
+---
+
+### 8.4 Commit Message Format
+
+Use the format: `type(scope): short description`
+
+| Prefix | Used for |
+|---|---|
+| `feat(scope):` | New feature or capability |
+| `fix(scope):` | Bug fix |
+| `docs(scope):` | Documentation change |
+| `test(scope):` | Adding or updating tests |
+| `refactor(scope):` | Code change with no feature or fix |
+| `chore(scope):` | Build, config, or tooling change |
+
+**Scope** is the component affected: `wizard`, `extraction`, `agent`, `api`, `ui`, `db`, `auth`, etc.
+
+Examples:
+```
+feat(extraction): add Amazon US search results extraction script v1.0
+fix(agent): prevent calc_margin returning NaN when COGS is zero
+test(tools): add 100% branch coverage to score_trend tool
+docs(architecture): add ADR-001 for Electron vs browser extension decision
+```
+
+---
+
+### 8.5 Pull Request Rules
+
+Every PR must:
+
+- [ ] Have a **title** matching the issue: `[#XX] Short description of what was built`
+- [ ] Include `Closes #<issue-number>` in the PR body — this auto-closes the issue on merge
+- [ ] Pass all automated checks (tests, lint) before review is requested
+- [ ] Have at least **1 approving review** before it can be merged
+- [ ] Request **Architect review** if the PR touches: API contracts, extraction interfaces, agent pipeline, security boundaries, or DB schema
+- [ ] Request **PM review** if the PR touches: UI screens, wizard content, recommendation card copy, or any user-visible text
+- [ ] Have no unresolved review comments at merge time
+
+PR template (create `.github/pull_request_template.md`):
+```markdown
+## What does this PR do?
+<!-- One paragraph summary -->
+
+## Linked Issue
+Closes #<issue-number>
+
+## Type of change
+- [ ] feat — new feature
+- [ ] fix — bug fix
+- [ ] docs — documentation
+- [ ] test — adding/updating tests
+- [ ] chore — build/config/tooling
+
+## Checklist
+- [ ] I have read the acceptance criteria on the issue
+- [ ] All acceptance criteria are met
+- [ ] Tests written and passing
+- [ ] No credentials, API keys, or secrets in this diff
+- [ ] Relevant docs updated (if applicable)
+- [ ] Architect review requested (if touching contracts/security)
+```
+
+---
+
+### 8.6 Merge Strategy
+
+- **Squash and merge only** — all commits on a feature branch are squashed into one commit on `main`
+- The squash commit message must follow the commit format in §8.4
+- After merge, the feature branch is **deleted automatically** (configured in repo settings)
+- Never rebase or force-push to `main`
+
+---
+
+### 8.7 Keeping Your Branch Up to Date
+
+If `main` has moved forward while you are working on your branch, rebase your branch onto `main` (do **not** merge `main` into your branch — it creates noisy merge commits):
+
+```bash
+git fetch origin
+git rebase origin/main
+
+# If there are conflicts, resolve them, then:
+git rebase --continue
+
+# Force-push your rebased branch (safe because it's your own branch, not main)
+git push --force-with-lease origin feature/11-market-selection-screen
+```
+
+---
+
+### 8.8 Release Branch Lifecycle (PM-owned)
+
+When all issues in a milestone reach `Done` and Tester confirms QA sign-off:
+
+```bash
+# PM creates the release branch from main
+git checkout main
+git pull origin main
+git checkout -b release/v1.0
+git push origin release/v1.0
+
+# PM creates GitHub Release with tag v1.0
+# (via GitHub UI: Releases → Draft new release → Tag: v1.0, Target: release/v1.0)
+
+# After release is published, PM merges back to main
+git checkout main
+git merge --no-ff release/v1.0
+git push origin main
+
+# Delete release branch
+git push origin --delete release/v1.0
+```
+
+**No Dev or Tester commits directly to a `release/*` branch.** If a bug is found during the release window, it is fixed on `main` via the normal PR process and cherry-picked by PM into the release branch.
+
+---
+
+### 8.9 Hotfix Branch Lifecycle (PM-owned)
+
+For a critical (P0) bug discovered after a release:
+
+```bash
+# PM creates hotfix branch from main (not from a feature branch)
+git checkout main
+git pull origin main
+git checkout -b hotfix/99-credential-leak-fix
+
+# PM assigns the hotfix branch to Dev for the fix
+# Dev opens a PR from hotfix/99-... → main (not into release)
+
+# After Tester signs off and PR is merged:
+# PM tags main with a patch version
+git tag v1.0.1
+git push origin v1.0.1
+```
+
+Hotfixes are tagged with a **patch version bump** (`vX.Y.Z`). A GitHub Release is created for every hotfix tag — no silent patches.
 
 ---
 
