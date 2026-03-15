@@ -1,0 +1,95 @@
+name: "Feature / Implementation"
+description: "A new capability to be designed by PM and built by Dev. Use this for role:dev work items."
+title: "[Dev] "
+labels: ["type:feature", "role:dev"]
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Before creating this issue:** PM must fill in the Acceptance Criteria completely before a Developer picks it up.
+        Label with the correct `epic:*`, `role:*`, and `P0`–`P3` priority before moving to `Ready`.
+
+  - type: dropdown
+    id: epic
+    attributes:
+      label: Epic
+      description: Which epic does this belong to?
+      options:
+        - "epic:foundation"
+        - "epic:wizard"
+        - "epic:extraction"
+        - "epic:agent"
+        - "epic:results-ui"
+        - "epic:china"
+        - "epic:security-nfr"
+        - "epic:monetization"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options:
+        - "P0 — Critical (must ship in current milestone)"
+        - "P1 — High (must ship this quarter)"
+        - "P2 — Medium (next milestone)"
+        - "P3 — Low (nice to have)"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: milestone
+    attributes:
+      label: Milestone
+      options:
+        - "M0 — Foundation"
+        - "M1 — Wizard + Extraction (US)"
+        - "M2 — Agent + Results"
+        - "M3 — Quality & NFRs"
+        - "M4 — China Market"
+        - "M5 — Monetization"
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Why does this need to be built? Link to the PRD section if applicable.
+      placeholder: "See PRD §X.X — ..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance_criteria
+    attributes:
+      label: Acceptance Criteria
+      description: Each item becomes a test case. Written by PM before Dev starts.
+      value: |
+        - [ ] 
+        - [ ] 
+        - [ ] 
+    validations:
+      required: true
+
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies
+      description: Issues that must be completed before this can start.
+      placeholder: "Blocked by: #XX"
+
+  - type: textarea
+    id: architecture_ref
+    attributes:
+      label: Architecture Reference
+      description: Which component / interface contract in ARCHITECTURE.md applies?
+      placeholder: "e.g. Section 4.3 ExtractionScript interface / Section 6 Backend AgentService"
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: Implementation hints, constraints, or open questions for Dev.

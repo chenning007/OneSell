@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Project Board
+    url: https://github.com/chenning007/OneSell/projects
+    about: View the current sprint board before creating an issue.

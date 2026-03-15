@@ -1,0 +1,91 @@
+name: "Open Question"
+description: "An unresolved question blocking progress. PM must resolve within 1 business day."
+title: "[Question] "
+labels: ["type:question", "role:pm"]
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **PM owns all open questions.** Post the resolution in the comments and close the issue when decided.
+        Add the `blocked` label to any issues that are waiting on this answer.
+
+  - type: dropdown
+    id: epic
+    attributes:
+      label: Epic
+      options:
+        - "epic:foundation"
+        - "epic:wizard"
+        - "epic:extraction"
+        - "epic:agent"
+        - "epic:results-ui"
+        - "epic:china"
+        - "epic:security-nfr"
+        - "epic:monetization"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options:
+        - "P0 — Blocking P0 work right now"
+        - "P1 — Blocking next sprint"
+        - "P2 — Should be decided soon"
+        - "P3 — Nice to clarify"
+    validations:
+      required: true
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Question
+      description: The specific decision that needs to be made.
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Why does this need to be answered? What work is blocked?
+    validations:
+      required: true
+
+  - type: textarea
+    id: options
+    attributes:
+      label: Options
+      value: |
+        - Option A: 
+        - Option B: 
+
+  - type: input
+    id: owner
+    attributes:
+      label: Owner
+      description: Who is responsible for resolving this? (Default: PM)
+      placeholder: "@PM"
+
+  - type: input
+    id: deadline
+    attributes:
+      label: Resolution Deadline
+      description: When does this need to be answered to avoid blocking other work?
+      placeholder: "e.g. 2026-03-20"
+
+  - type: textarea
+    id: blocked_issues
+    attributes:
+      label: Blocked Issues
+      description: List issues that cannot progress until this is resolved.
+      placeholder: "Blocked: #XX, #YY"
+
+  - type: textarea
+    id: resolution
+    attributes:
+      label: Resolution
+      description: Filled in by PM when the question is decided. Then close this issue.
+      placeholder: "(TBD)"

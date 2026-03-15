@@ -225,5 +225,83 @@ Add the `blocked` label to your issue, post a comment explaining the blocker, an
 
 ---
 
+## 11. Human-in-the-Loop Gates (AI-Driven Project)
+
+> This section applies when AI agents (GitHub Copilot, automated workflows) are executing the roles above. The **human owner** must be reachable and must make the following decisions — AI may not proceed past these gates without explicit human approval.
+
+### The Four Hard Gates
+
+| Gate | Trigger | Human Action Required | Notification Channel |
+|---|---|---|---|
+| **PRD Gate** | AI PM commits a change to `docs/PRD-*.md` | Approve or reject the updated PRD before AI creates sprint issues | GitHub email + Slack (if configured) |
+| **Architecture Gate** | AI Architect commits a new `docs/architecture/ADR-*.md` | Approve or reject the ADR before AI Dev begins implementation | GitHub email + Slack (if configured) |
+| **PR Review Gate** | AI Dev marks a PR `ready_for_review` | Review the PR diff and approve merge via GitHub PR review | GitHub email + Slack (if configured) |
+| **Release Gate** | All milestone issues Done, all P0/P1 tests passed | Final go/no-go for cutting the release tag | GitHub email + Slack (if configured) |
+
+### How AI Agents Request Human Sign-off
+
+When an AI agent reaches a gate it cannot pass alone, it must:
+
+1. Add the label **`needs-human-signoff`** to the relevant issue or PR
+2. Post a comment with:
+   - What was completed
+   - What decision is needed
+   - What happens if approved vs rejected
+   - A link to the relevant artifact (PRD diff, ADR file, PR, milestone)
+3. **Stop all dependent work** until the human responds
+
+Adding `needs-human-signoff` automatically triggers `.github/workflows/notify-human.yml`, which sends a notification to the human owner via:
+- **GitHub notification email** (always — requires notification settings enabled)
+- **Slack DM or channel** (if `SLACK_WEBHOOK_URL` secret is configured)
+- **Direct email via SMTP** (if SMTP secrets are configured)
+
+### How the Human Responds
+
+The human owner responds **on GitHub** — not by email reply:
+
+1. Open the link in the notification
+2. Read the issue/PR and the AI's comment
+3. Post a comment with your decision:
+   - ✅ **Approved**: `Approved — proceed` (or any approval phrase)
+   - ❌ **Rejected**: `Rejected — [reason and what needs to change]`
+4. Remove the `needs-human-signoff` label
+5. AI agents resume work on the next trigger
+
+### Setting Up Notifications (One-Time Setup)
+
+**Required — GitHub email (always active once configured):**
+1. Go to `github.com > Settings > Notifications`
+2. Enable **Email** for: *Participating and @mentions* and *Actions*
+3. You will be @mentioned automatically when issues are assigned to you or labeled
+
+**Optional — Slack (recommended for instant response):**
+1. Create a Slack Incoming Webhook: `api.slack.com/apps > Create App > Incoming Webhooks`
+2. Go to `github.com/chenning007/OneSell/settings/secrets/actions`
+3. Add secret: `SLACK_WEBHOOK_URL` = your webhook URL
+
+**Optional — Custom email via SMTP:**
+Add these secrets in `Settings > Secrets > Actions`:
+- `NOTIFY_EMAIL_TO` — your email address
+- `NOTIFY_EMAIL_FROM` — sender address
+- `SMTP_SERVER` — e.g. `smtp.gmail.com`
+- `SMTP_USERNAME` — SMTP account
+- `SMTP_PASSWORD` — SMTP password or app-specific password
+
+**Required — GitHub Environments (approval gates):**
+1. Go to `github.com/chenning007/OneSell/settings/environments`
+2. Create four environments: `prd-approval`, `architecture-approval`, `qa-signoff`, `release-approval`
+3. For each: click **Required reviewers** → add your GitHub username
+4. GitHub will email you with an Approve/Reject button when any workflow reaches these gates
+
+### What AI Agents Must NEVER Do Without Human Approval
+
+- Merge a PR to `main`
+- Create a `release/*` or `hotfix/*` branch
+- Publish a GitHub Release or git tag
+- Close a milestone
+- Change or delete acceptance criteria on a `role:pm` issue
+
+---
+
 *Questions about this process? Open a `type:question` issue labeled `role:pm`.*
 

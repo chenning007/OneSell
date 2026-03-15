@@ -1,0 +1,59 @@
+# CODEOWNERS — OneSell Scout
+#
+# Determines who is automatically requested for review when a PR touches
+# specific paths. Maps to the role responsibilities defined in
+# docs/PROJECT-MANAGEMENT.md and .github/copilot-instructions.md.
+#
+# Format: <pattern>  <@github-username or @org/team>
+# The LAST matching pattern wins (GitHub evaluation order).
+#
+# PLACEHOLDER: Replace @pm-handle, @architect-handle, @dev-lead-handle,
+# @tester-handle with actual GitHub usernames or team slugs.
+# e.g.  @org/architects  or  @chenning007
+
+# ─── Default: all files require architect + dev-lead review ───────────────
+*                          @architect-handle @dev-lead-handle
+
+# ─── Product / PRD — PM owns ──────────────────────────────────────────────
+docs/PRD-*.md              @pm-handle
+docs/PROJECT-MANAGEMENT.md @pm-handle
+
+# ─── Architecture — Architect owns ───────────────────────────────────────
+docs/ARCHITECTURE.md       @architect-handle
+docs/architecture/         @architect-handle
+docs/guides/               @architect-handle
+
+# ─── Copilot & workflow config — Architect + Dev Lead own ────────────────
+.github/copilot-instructions.md   @architect-handle @pm-handle
+.github/instructions/             @architect-handle
+.github/workflows/                @architect-handle @dev-lead-handle
+.github/ISSUE_TEMPLATE/           @pm-handle
+
+# ─── Client extraction layer — security-critical, Architect must review ──
+onesell-client/src/main/extraction/ExtractionManager.ts   @architect-handle
+onesell-client/src/main/extraction/ExtractionScriptRegistry.ts  @architect-handle
+onesell-client/src/main/extraction/scripts/               @dev-lead-handle
+onesell-client/src/main/ipc/                              @architect-handle
+onesell-client/src/shared/                                @architect-handle
+
+# ─── Backend agent pipeline — Architect must review all LLM/tool changes ─
+onesell-backend/src/services/agent/                       @architect-handle
+onesell-backend/src/services/agent/tools/                 @architect-handle @dev-lead-handle
+onesell-backend/src/services/agent/prompts/               @architect-handle @pm-handle
+
+# ─── Backend API / auth / rate-limit — security-critical ─────────────────
+onesell-backend/src/api/middleware/                        @architect-handle
+onesell-backend/src/api/routes/                            @dev-lead-handle
+
+# ─── Data schema and migrations — Architect must review ──────────────────
+onesell-backend/src/db/                                    @architect-handle
+onesell-backend/migrations/                                @architect-handle
+
+# ─── Market config — PM + Architect must review for new markets ──────────
+onesell-backend/src/services/market/                       @pm-handle @architect-handle
+onesell-client/src/renderer/i18n/                          @pm-handle
+
+# ─── Test files — Tester lead reviews ────────────────────────────────────
+tests/                     @tester-handle
+onesell-client/tests/      @tester-handle
+onesell-backend/tests/     @tester-handle

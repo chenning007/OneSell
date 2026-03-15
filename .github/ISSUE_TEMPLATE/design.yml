@@ -1,0 +1,84 @@
+name: "Design / Architecture Decision"
+description: "An architectural or design decision that must be resolved before Dev can implement. Use for role:architect work items."
+title: "[Architect] "
+labels: ["type:design", "role:architect"]
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Architect owns this issue.** When the decision is made, post the Decision section as a comment,
+        commit any ADR or schema to `/docs/architecture/`, and unblock dependent `role:dev` issues.
+
+  - type: dropdown
+    id: epic
+    attributes:
+      label: Epic
+      options:
+        - "epic:foundation"
+        - "epic:wizard"
+        - "epic:extraction"
+        - "epic:agent"
+        - "epic:results-ui"
+        - "epic:china"
+        - "epic:security-nfr"
+        - "epic:monetization"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options:
+        - "P0 — Critical"
+        - "P1 — High"
+        - "P2 — Medium"
+        - "P3 — Low"
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem_statement
+    attributes:
+      label: Problem Statement
+      description: What design decision or architectural question needs to be resolved? What is blocked until this is answered?
+    validations:
+      required: true
+
+  - type: textarea
+    id: options
+    attributes:
+      label: Options Considered
+      description: Fill in the table with the options under consideration.
+      value: |
+        | Option | Pros | Cons |
+        |---|---|---|
+        | Option A | ... | ... |
+        | Option B | ... | ... |
+    validations:
+      required: true
+
+  - type: textarea
+    id: decision
+    attributes:
+      label: Decision
+      description: (Filled in by Architect when resolved) — chosen approach and rationale.
+      placeholder: "TBD — Architect fills this in when the issue is resolved."
+
+  - type: textarea
+    id: output_artifacts
+    attributes:
+      label: Output Artifacts
+      value: |
+        - [ ] ADR committed to `/docs/architecture/ADR-NNN-*.md`
+        - [ ] ADR index updated in `/docs/architecture/README.md`
+        - [ ] API schema updated (if applicable)
+        - [ ] Dependent `role:dev` issues created/unblocked
+
+  - type: textarea
+    id: affected_components
+    attributes:
+      label: Affected Components
+      description: Which system components / interface contracts does this decision affect?
+      placeholder: "e.g. ExtractionScriptRegistry, AgentService, AnalysisPayload schema"

@@ -1,0 +1,254 @@
+name: CI
+
+on:
+  push:
+    branches: [main, "feature/**", "fix/**", "spike/**"]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ────────────────────────────────────────────────
+  # 1. LINT + TYPE CHECK (fast fail — no build cost)
+  # ────────────────────────────────────────────────
+  lint-typecheck:
+    name: Lint & Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint (client)
+        run: pnpm --filter onesell-client lint
+
+      - name: Lint (backend)
+        run: pnpm --filter onesell-backend lint
+
+      - name: Type check (client)
+        run: pnpm --filter onesell-client typecheck
+
+      - name: Type check (backend)
+        run: pnpm --filter onesell-backend typecheck
+
+  # ────────────────────────────────────────────────
+  # 2. UNIT TESTS
+  # ────────────────────────────────────────────────
+  unit-tests:
+    name: Unit Tests
+    needs: lint-typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Unit tests (client)
+        run: pnpm --filter onesell-client test:unit --reporter=verbose
+
+      - name: Unit tests (backend)
+        run: pnpm --filter onesell-backend test:unit --reporter=verbose
+
+      - name: Upload coverage
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: unit-coverage
+          path: "**/coverage/"
+          retention-days: 7
+
+  # ────────────────────────────────────────────────
+  # 3. INTEGRATION TESTS (needs Postgres + Redis)
+  # ────────────────────────────────────────────────
+  integration-tests:
+    name: Integration Tests
+    needs: unit-tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: onesell_test
+          POSTGRES_USER: onesell
+          POSTGRES_PASSWORD: onesell_test_pw
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://onesell:onesell_test_pw@localhost:5432/onesell_test
+      REDIS_URL: redis://localhost:6379
+      NODE_ENV: test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run DB migrations
+        run: pnpm --filter onesell-backend db:migrate
+
+      - name: Integration tests (backend)
+        run: pnpm --filter onesell-backend test:integration --reporter=verbose
+
+  # ────────────────────────────────────────────────
+  # 4. SECURITY CHECKS
+  # ────────────────────────────────────────────────
+  security:
+    name: Security Checks
+    needs: lint-typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Security tests (architectural principle P1–P9 checks)
+        run: pnpm --filter onesell-backend test:security --reporter=verbose
+
+      - name: Audit dependencies for known CVEs
+        run: pnpm audit --audit-level=high
+        continue-on-error: false
+
+      - name: Scan for hardcoded secrets
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ${{ github.event.repository.default_branch }}
+          head: HEAD
+          extra_args: --only-verified
+
+      - name: Check for eval() and shell execution
+        run: |
+          # Fail if eval() or child_process.exec/spawn appear in source (not tests)
+          if grep -rn --include="*.ts" "eval(" onesell-client/src/main onesell-backend/src; then
+            echo "ERROR: eval() found in source code — banned by architectural principle P9"
+            exit 1
+          fi
+          if grep -rn --include="*.ts" "child_process" onesell-client/src/main onesell-backend/src; then
+            echo "ERROR: child_process found in source code — banned by architectural principle P9"
+            exit 1
+          fi
+
+  # ────────────────────────────────────────────────
+  # 5. BUILD (only on pushes to main or PRs to main)
+  # ────────────────────────────────────────────────
+  build:
+    name: Build
+    needs: [integration-tests, security]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build backend
+        run: pnpm --filter onesell-backend build
+
+      - name: Build client (renderer + Electron, no packaging)
+        run: pnpm --filter onesell-client build:ci
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-output
+          path: |
+            onesell-backend/dist/
+            onesell-client/dist/
+          retention-days: 3
+
+  # ────────────────────────────────────────────────
+  # 6. PR VALIDATION (PR-only checks)
+  # ────────────────────────────────────────────────
+  pr-validation:
+    name: PR Validation
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Verify PR links an issue
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          if ! echo "$PR_BODY" | grep -iE "closes #[0-9]+|fixes #[0-9]+|resolves #[0-9]+"; then
+            echo "ERROR: PR description must include 'Closes #<issue-number>'"
+            echo "See .github/pull_request_template.md for required format."
+            exit 1
+          fi
+
+      - name: Verify branch naming convention
+        env:
+          BRANCH: ${{ github.head_ref }}
+        run: |
+          if ! echo "$BRANCH" | grep -E "^(feature|fix|docs|spike|chore)/[0-9]+-[a-z0-9-]+$"; then
+            echo "ERROR: Branch '$BRANCH' does not follow naming convention."
+            echo "Required: feature/<issue#>-name | fix/<issue#>-name | docs/<issue#>-name | spike/<issue#>-name"
+            exit 1
+          fi

@@ -1,0 +1,112 @@
+name: "Test Plan / QA Execution"
+description: "A test plan to be authored by Tester before implementation is complete. Use for role:tester work items."
+title: "[Tester] Test plan: "
+labels: ["type:test", "role:tester"]
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Test plans must be authored BEFORE the feature implementation is complete.**
+        Link this issue to the corresponding `type:feature` issue so Dev knows a test plan exists.
+        When execution is complete and all criteria pass, post `✅ QA passed` on the **feature** issue — that is the Done gate.
+
+  - type: input
+    id: linked_feature
+    attributes:
+      label: Linked Feature Issue
+      description: The feature issue this test plan covers.
+      placeholder: "#XX"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: epic
+    attributes:
+      label: Epic
+      options:
+        - "epic:foundation"
+        - "epic:wizard"
+        - "epic:extraction"
+        - "epic:agent"
+        - "epic:results-ui"
+        - "epic:china"
+        - "epic:security-nfr"
+        - "epic:monetization"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options:
+        - "P0 — Critical"
+        - "P1 — High"
+        - "P2 — Medium"
+        - "P3 — Low"
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: What feature or component does this test plan cover? List which AC items map to which test cases.
+    validations:
+      required: true
+
+  - type: textarea
+    id: test_cases
+    attributes:
+      label: Test Cases
+      value: |
+        | # | Test Scenario | Input | Expected Output | Pass/Fail |
+        |---|---|---|---|---|
+        | 1 | | | | |
+        | 2 | | | | |
+        | 3 | | | | |
+    validations:
+      required: true
+
+  - type: textarea
+    id: arch_principle_tests
+    attributes:
+      label: Architectural Principle Verification
+      description: "Which architectural principles (P1–P9) are exercised by this feature? List the corresponding test for each."
+      placeholder: |
+        - P1 (credentials never leave client): IPC payload scan for credential-shaped fields
+        - P5 (graceful degradation): test with empty/partial platform data
+
+  - type: textarea
+    id: edge_cases
+    attributes:
+      label: Edge Cases & Negative Tests
+      value: |
+        - [ ] 
+        - [ ] 
+
+  - type: textarea
+    id: entry_criteria
+    attributes:
+      label: Entry Criteria
+      description: What must be true before testing begins?
+      placeholder: "Feature branch merged to main; Dev has posted completion comment on feature issue."
+    validations:
+      required: true
+
+  - type: textarea
+    id: exit_criteria
+    attributes:
+      label: Exit Criteria
+      description: What must be true for this test to be signed off?
+      placeholder: "All AC items checked off; no open P0/P1 bugs linked to this issue."
+    validations:
+      required: true
+
+  - type: textarea
+    id: findings
+    attributes:
+      label: Findings
+      description: Filled in by Tester during execution. Link any bug issues raised.
+      placeholder: "(TBD — filled during execution)"

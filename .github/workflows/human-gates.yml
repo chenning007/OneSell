@@ -1,0 +1,304 @@
+name: Human Approval Gates
+
+# Triggers for all key human sign-off points in the AI-driven workflow.
+# ─────────────────────────────────────────────────────────────────────
+# This workflow pauses AI progress at four gates and notifies the human
+# owner via GitHub (email), Slack, and/or email — whichever channels are
+# configured as repository secrets (see below).
+#
+# REQUIRED SETUP (one-time, in GitHub repo settings):
+#
+# 1. GitHub Environments  →  Settings > Environments  →  create FOUR environments:
+#    a. prd-approval        → add yourself as Required Reviewer
+#    b. architecture-approval → add yourself as Required Reviewer
+#    c. qa-signoff          → add yourself as Required Reviewer
+#    d. release-approval    → add yourself as Required Reviewer
+#    GitHub will email you automatically when any job reaches these gates.
+#
+# 2. Optional notification secrets  →  Settings > Secrets > Actions:
+#    SLACK_WEBHOOK_URL      → Slack Incoming Webhook URL (for Slack DMs/channel)
+#    NOTIFY_EMAIL_TO        → your email address (e.g. you@company.com)
+#    NOTIFY_EMAIL_FROM      → sender address
+#    SMTP_SERVER            → SMTP host
+#    SMTP_USERNAME          → SMTP login
+#    SMTP_PASSWORD          → SMTP password
+#
+# 3. Enable GitHub email notifications:
+#    github.com > Settings > Notifications > Actions > check "Email"
+#    Also check "Participating and @mentions" to receive @mention emails.
+
+on:
+  # Gate 1: PRD changed → needs human PM sign-off
+  push:
+    paths:
+      - "docs/PRD-*.md"
+    branches: [main, "docs/**"]
+
+  # Gate 2: A new ADR is committed → needs human architect sign-off
+  push:
+    paths:
+      - "docs/architecture/ADR-*.md"
+    branches: [main, "docs/**", "spike/**"]
+
+  # Gate 3: PR opened against main → human reviews before merge
+  pull_request:
+    types: [ready_for_review]
+    branches: [main]
+
+  # Gate 4: Manual release trigger → human approves before tag + release notes
+  workflow_dispatch:
+    inputs:
+      gate:
+        description: "Which gate to open"
+        required: true
+        type: choice
+        options:
+          - prd-approval
+          - architecture-approval
+          - qa-signoff
+          - release-approval
+      context:
+        description: "Issue/PR number or brief description (shown in notification)"
+        required: true
+      milestone:
+        description: "Milestone this belongs to (e.g. M1 — Wizard)"
+        required: false
+
+jobs:
+  # ─────────────────────────────────────────────────────────────────
+  # GATE 1 — PRD changed: pause until human PM approves
+  # ─────────────────────────────────────────────────────────────────
+  prd-approval-gate:
+    name: "⏸ PRD Change — Awaiting Human PM Approval"
+    if: >
+      github.event_name == 'push' &&
+      contains(join(github.event.commits.*.modified, ' '), 'docs/PRD')
+    runs-on: ubuntu-latest
+    environment:
+      name: prd-approval   # ← GitHub will email you to click Approve/Reject
+    steps:
+      - name: Notify via Slack (if configured)
+        if: ${{ env.SLACK_WEBHOOK_URL != '' }}
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: |
+            {
+              "text": "🔴 *OneSell: PRD Updated — Your Approval Required*\n*Repo*: <https://github.com/${{ github.repository }}|${{ github.repository }}>\n*Changed by*: ${{ github.actor }}\n*Commit*: <https://github.com/${{ github.repository }}/commit/${{ github.sha }}|${{ github.sha }}>\n*Files*: ${{ join(github.event.commits[0].modified, ', ') }}\n\n👉 <https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|Click here to Approve or Reject>\n\nIf you approve, AI team will continue creating sprint issues from the new PRD version."
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      - name: Send email notification (if SMTP configured)
+        if: ${{ env.SMTP_SERVER != '' }}
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.SMTP_SERVER }}
+          server_port: 465
+          username: ${{ secrets.SMTP_USERNAME }}
+          password: ${{ secrets.SMTP_PASSWORD }}
+          subject: "[OneSell] PRD Updated — Your Approval Required"
+          to: ${{ secrets.NOTIFY_EMAIL_TO }}
+          from: ${{ secrets.NOTIFY_EMAIL_FROM }}
+          html_body: |
+            <h2>🔴 OneSell Scout — PRD Change Awaiting Your Sign-off</h2>
+            <p><b>Changed by</b>: ${{ github.actor }}<br>
+            <b>Commit</b>: <a href="https://github.com/${{ github.repository }}/commit/${{ github.sha }}">${{ github.sha }}</a></p>
+            <p><b>What changed in the PRD</b>:<br>${{ join(github.event.commits[0].modified, '<br>') }}</p>
+            <hr>
+            <h3>Action Required</h3>
+            <p>The AI PM agent has updated the PRD. Before the AI team proceeds with creating sprint issues from the new version, <b>you must approve or reject</b> this change.</p>
+            <p>
+              <a href="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}" style="background:#2da44e;color:white;padding:10px 20px;text-decoration:none;border-radius:4px;font-weight:bold;">✅ Review & Approve on GitHub</a>
+            </p>
+            <p><small>If you reject, the workflow stops. Post your decision as a comment on the linked issue.</small></p>
+        env:
+          SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
+
+      - name: Approval confirmed — log decision
+        run: |
+          echo "✅ PRD change approved by human PM at $(date -u)"
+          echo "Workflow was approved by a human reviewer in the 'prd-approval' environment."
+          echo "AI team may now proceed with sprint planning."
+
+  # ─────────────────────────────────────────────────────────────────
+  # GATE 2 — New ADR committed: pause until human architect approves
+  # ─────────────────────────────────────────────────────────────────
+  architecture-approval-gate:
+    name: "⏸ New ADR — Awaiting Human Architect Approval"
+    if: >
+      github.event_name == 'push' &&
+      contains(join(github.event.commits.*.added, ' '), 'docs/architecture/ADR-')
+    runs-on: ubuntu-latest
+    environment:
+      name: architecture-approval
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract ADR title
+        id: adr
+        run: |
+          ADDED=$(echo '${{ toJson(github.event.commits[0].added) }}' | jq -r '.[]' | grep 'ADR-' | head -1)
+          echo "path=$ADDED" >> $GITHUB_OUTPUT
+          if [ -f "$ADDED" ]; then
+            TITLE=$(head -1 "$ADDED" | sed 's/^# //')
+            echo "title=$TITLE" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Notify via Slack (if configured)
+        if: ${{ env.SLACK_WEBHOOK_URL != '' }}
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: |
+            {
+              "text": "🏗️ *OneSell: New Architecture Decision — Your Approval Required*\n*ADR*: ${{ steps.adr.outputs.title }}\n*File*: `${{ steps.adr.outputs.path }}`\n*Author*: ${{ github.actor }}\n\n👉 <https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|Approve or Reject this ADR>\n\nIf approved, AI Dev team will unblock and begin implementation."
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      - name: Send email notification (if SMTP configured)
+        if: ${{ env.SMTP_SERVER != '' }}
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.SMTP_SERVER }}
+          server_port: 465
+          username: ${{ secrets.SMTP_USERNAME }}
+          password: ${{ secrets.SMTP_PASSWORD }}
+          subject: "[OneSell] Architecture Decision Ready — Your Review Required"
+          to: ${{ secrets.NOTIFY_EMAIL_TO }}
+          from: ${{ secrets.NOTIFY_EMAIL_FROM }}
+          html_body: |
+            <h2>🏗️ OneSell Scout — Architecture Decision Awaiting Your Sign-off</h2>
+            <p><b>ADR</b>: ${{ steps.adr.outputs.title }}<br>
+            <b>File</b>: <code>${{ steps.adr.outputs.path }}</code><br>
+            <b>Author</b>: ${{ github.actor }}</p>
+            <hr>
+            <h3>Action Required</h3>
+            <p>The AI Architect agent has authored an Architecture Decision Record. Review the ADR and approve or reject below.</p>
+            <p><a href="https://github.com/${{ github.repository }}/blob/main/${{ steps.adr.outputs.path }}" style="text-decoration:none;font-weight:bold;">📄 Read the ADR</a></p>
+            <p>
+              <a href="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}" style="background:#2da44e;color:white;padding:10px 20px;text-decoration:none;border-radius:4px;font-weight:bold;">✅ Approve or Reject on GitHub</a>
+            </p>
+        env:
+          SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
+
+      - name: Approval confirmed — unblock Dev issues
+        run: |
+          echo "✅ Architecture decision approved by human at $(date -u)"
+          echo "AI Dev team may now pick up implementation issues."
+
+  # ─────────────────────────────────────────────────────────────────
+  # GATE 3 — PR ready for review: notify human to review
+  # ─────────────────────────────────────────────────────────────────
+  pr-human-review-gate:
+    name: "⏸ PR Ready — Awaiting Human Review"
+    if: github.event_name == 'pull_request' && github.event.action == 'ready_for_review'
+    runs-on: ubuntu-latest
+    environment:
+      name: qa-signoff
+    steps:
+      - name: Notify via Slack (if configured)
+        if: ${{ env.SLACK_WEBHOOK_URL != '' }}
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: |
+            {
+              "text": "🔍 *OneSell: PR Ready for Your Review*\n*PR*: <${{ github.event.pull_request.html_url }}|${{ github.event.pull_request.title }}>\n*Author*: ${{ github.actor }}\n*Branch*: `${{ github.head_ref }}` → `main`\n\n*Description*:\n${{ github.event.pull_request.body }}\n\n👉 <${{ github.event.pull_request.html_url }}|Review the PR on GitHub>"
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      - name: Send email notification (if SMTP configured)
+        if: ${{ env.SMTP_SERVER != '' }}
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.SMTP_SERVER }}
+          server_port: 465
+          username: ${{ secrets.SMTP_USERNAME }}
+          password: ${{ secrets.SMTP_PASSWORD }}
+          subject: "[OneSell] PR Ready for Your Review: ${{ github.event.pull_request.title }}"
+          to: ${{ secrets.NOTIFY_EMAIL_TO }}
+          from: ${{ secrets.NOTIFY_EMAIL_FROM }}
+          html_body: |
+            <h2>🔍 OneSell Scout — Pull Request Ready for Your Review</h2>
+            <table>
+              <tr><td><b>PR</b></td><td><a href="${{ github.event.pull_request.html_url }}">${{ github.event.pull_request.title }}</a></td></tr>
+              <tr><td><b>Author</b></td><td>${{ github.actor }}</td></tr>
+              <tr><td><b>Branch</b></td><td><code>${{ github.head_ref }}</code> → <code>main</code></td></tr>
+              <tr><td><b>Files changed</b></td><td>${{ github.event.pull_request.changed_files }}</td></tr>
+            </table>
+            <h3>Description</h3>
+            <pre>${{ github.event.pull_request.body }}</pre>
+            <hr>
+            <p>
+              <a href="${{ github.event.pull_request.html_url }}" style="background:#2da44e;color:white;padding:10px 20px;text-decoration:none;border-radius:4px;font-weight:bold;">🔍 Review PR on GitHub</a>
+              &nbsp;
+              <a href="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}" style="background:#0969da;color:white;padding:10px 20px;text-decoration:none;border-radius:4px;font-weight:bold;">☑️ Approve Gate</a>
+            </p>
+        env:
+          SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
+
+      - name: Human review gate passed
+        run: echo "✅ Human reviewer approved PR gate at $(date -u)"
+
+  # ─────────────────────────────────────────────────────────────────
+  # GATE 4 — Manual: release approval (triggered via workflow_dispatch)
+  # ─────────────────────────────────────────────────────────────────
+  release-approval-gate:
+    name: "⏸ Release Gate — Awaiting Human PM Sign-off"
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.gate == 'release-approval'
+    runs-on: ubuntu-latest
+    environment:
+      name: release-approval
+    steps:
+      - name: Notify via Slack (if configured)
+        if: ${{ env.SLACK_WEBHOOK_URL != '' }}
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: |
+            {
+              "text": "🚢 *OneSell: Release Ready — Your Sign-off Required*\n*Milestone*: ${{ github.event.inputs.milestone }}\n*Context*: ${{ github.event.inputs.context }}\n*Triggered by*: ${{ github.actor }}\n\n👉 <https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|Approve release on GitHub>\n\nAll P0/P1 tests passed. AI team is waiting for your go/no-go decision."
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      - name: Send email notification (if SMTP configured)
+        if: ${{ env.SMTP_SERVER != '' }}
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.SMTP_SERVER }}
+          server_port: 465
+          username: ${{ secrets.SMTP_USERNAME }}
+          password: ${{ secrets.SMTP_PASSWORD }}
+          subject: "[OneSell] 🚢 Release Ready — Your Go/No-Go Decision Required"
+          to: ${{ secrets.NOTIFY_EMAIL_TO }}
+          from: ${{ secrets.NOTIFY_EMAIL_FROM }}
+          html_body: |
+            <h2>🚢 OneSell Scout — Release Awaiting Your Go/No-Go</h2>
+            <table>
+              <tr><td><b>Milestone</b></td><td>${{ github.event.inputs.milestone }}</td></tr>
+              <tr><td><b>Context</b></td><td>${{ github.event.inputs.context }}</td></tr>
+              <tr><td><b>Triggered by</b></td><td>${{ github.actor }}</td></tr>
+            </table>
+            <h3>What happens when you approve</h3>
+            <ol>
+              <li>PM AI cuts the <code>release/vX.Y</code> branch</li>
+              <li>PM AI creates the GitHub Release with tag and release notes</li>
+              <li>Milestone is closed</li>
+              <li>Release branch is merged back to <code>main</code></li>
+            </ol>
+            <h3>What happens when you reject</h3>
+            <p>Workflow stops. Post a comment on the milestone issue explaining what needs to change.</p>
+            <hr>
+            <p>
+              <a href="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}" style="background:#2da44e;color:white;padding:10px 20px;text-decoration:none;border-radius:4px;font-weight:bold;">🚢 Approve Release</a>
+              &nbsp;
+              <a href="https://github.com/${{ github.repository }}/milestones" style="background:#0969da;color:white;padding:10px 20px;text-decoration:none;border-radius:4px;font-weight:bold;">📋 View Milestone</a>
+            </p>
+        env:
+          SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
+
+      - name: Release approved — proceed
+        run: |
+          echo "✅ Release approved by human PM at $(date -u)"
+          echo "Milestone: ${{ github.event.inputs.milestone }}"
+          echo "AI PM may now cut the release branch and create the GitHub Release."
