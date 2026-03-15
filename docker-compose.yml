@@ -1,0 +1,47 @@
+version: "3.9"
+
+# Local development environment for OneSell Scout backend.
+# Starts PostgreSQL 16 + Redis 7 with persistent volumes.
+#
+# Usage:
+#   docker compose up -d         # start in background
+#   docker compose down          # stop (data preserved in volumes)
+#   docker compose down -v       # stop + destroy volumes (clean slate)
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: onesell-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: onesell_dev
+      POSTGRES_USER: onesell
+      POSTGRES_PASSWORD: onesell_dev_pw
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U onesell -d onesell_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: onesell-redis
+    restart: unless-stopped
+    command: redis-server --save 60 1 --loglevel warning
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+  redis_data:

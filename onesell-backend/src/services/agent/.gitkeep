@@ -1,0 +1,17 @@
+// Agent Service — Plan → Execute → Synthesize pipeline
+// Architectural contract: see docs/ARCHITECTURE.md §7
+//
+// Files in this directory (implemented in M2):
+//   AgentService.ts       — orchestrates the full pipeline
+//   PlannerAgent.ts       — parses payload → produces analysis plan
+//   ExecutorAgent.ts      — executes plan steps using ToolRegistry
+//   SynthesizerAgent.ts   — converts executor output → ProductCard[]
+//   ToolRegistry.ts       — registers all deterministic tool functions
+//   LLMProvider.ts        — abstraction: OpenAI / Qwen / DeepSeek
+//
+// ARCHITECTURAL PRINCIPLE P3:
+//   All numeric values MUST come from tools/ — never from LLM output directly.
+//
+// tools/    — deterministic pure functions (100% branch coverage required)
+// prompts/  — market-specific system prompts
+export {};

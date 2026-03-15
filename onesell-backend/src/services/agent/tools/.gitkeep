@@ -1,0 +1,14 @@
+// Agent tool functions — all must be pure, synchronous, deterministic
+// Implemented in M2. See docs/ARCHITECTURE.md §7 and §4.3
+//
+// Required tools (from PRD §6):
+//   calc-margin.ts          — computes net margin from price, COGS, fees
+//   rank-competition.ts     — scores competition level from listing data
+//   score-trend.ts          — converts trend index to normalised score
+//   flag-beginner-risk.ts   — applies risk heuristics for new sellers
+//   compare-products.ts     — ranks product candidates by composite score
+//   estimate-cogs.ts        — estimates COGS from supplier data
+//   get-platform-fees.ts    — returns fee structure for market+platform
+//
+// Each tool must have 100% branch coverage unit tests.
+export {};

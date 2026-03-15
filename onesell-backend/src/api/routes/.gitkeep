@@ -1,0 +1,7 @@
+// API routes — registered with Fastify in src/index.ts
+// Implemented in M1/M2:
+//   auth.routes.ts      — /auth/register, /auth/login, /auth/refresh
+//   analysis.routes.ts  — /analysis (POST), /analysis/:id/status, /analysis/:id/results
+//   user.routes.ts      — /user/preferences, /user/saved-lists
+//   markets.routes.ts   — /markets (public, cached)
+export {};

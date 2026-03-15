@@ -1,0 +1,14 @@
+// Extraction layer — Main Process only
+// See docs/ARCHITECTURE.md §4.2 and §4.3
+//
+// Files (implemented in M1):
+//   ExtractionManager.ts         — orchestrates platform extraction flows
+//   ExtractionScriptRegistry.ts  — maps platformId → ExtractionScript
+//   PayloadBuilder.ts            — assembles AnalysisPayload from normalized data
+//
+// scripts/   — one subdirectory per platform (e.g. scripts/amazon-us/)
+//   Each implements ExtractionScript interface — no other files change when adding a platform.
+//
+// ARCHITECTURAL PRINCIPLE P6: extraction scripts are isolated plugins.
+// ARCHITECTURAL PRINCIPLE P2: no analysis or scoring logic in this layer.
+export {};

@@ -1,0 +1,15 @@
+// React renderer — UI modules
+// Implemented in M1 (wizard, data-sources) and M2 (progress, results)
+//
+// modules/
+//   wizard/        — Steps 1–6 preference wizard (M1)
+//   data-sources/  — Platform connect + extraction trigger (M1)
+//   progress/      — Extraction + analysis progress screens (M2)
+//   results/       — Product cards + drill-down (M2)
+//
+// store/         — Zustand stores: sessionSlice.ts, resultsSlice.ts
+// i18n/          — Localization per market: us.ts, cn.ts, sea.ts
+// components/    — Shared UI components
+//
+// SECURITY: no direct Node.js access from renderer. All system ops via IPC.
+export {};

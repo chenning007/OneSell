@@ -1,0 +1,7 @@
+// API middleware — auth, rate limiting, Zod validation
+// Implemented in M1 — see docs/ARCHITECTURE.md §6.1
+// Each middleware lives in its own file:
+//   auth.ts       — JWT validation (RS256)
+//   rateLimit.ts  — Redis-backed per-user/tier rate limits
+//   validate.ts   — Zod request body/query validation
+export {};

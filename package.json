@@ -1,0 +1,27 @@
+{
+  "name": "onesell",
+  "private": true,
+  "version": "0.0.0",
+  "description": "OneSell Scout — monorepo root",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "scripts": {
+    "dev:backend": "pnpm --filter onesell-backend dev",
+    "dev:client": "pnpm --filter onesell-client dev",
+    "build": "pnpm --filter onesell-backend build && pnpm --filter onesell-client build",
+    "test:unit": "pnpm --filter onesell-backend test:unit && pnpm --filter onesell-client test:unit",
+    "test:integration": "pnpm --filter onesell-backend test:integration",
+    "test:security": "pnpm --filter onesell-backend test:security",
+    "test:e2e": "pnpm --filter onesell-client test:e2e",
+    "lint": "pnpm --filter onesell-backend lint && pnpm --filter onesell-client lint",
+    "typecheck": "pnpm --filter onesell-backend typecheck && pnpm --filter onesell-client typecheck",
+    "db:migrate": "pnpm --filter onesell-backend db:migrate",
+    "db:generate": "pnpm --filter onesell-backend db:generate"
+  },
+  "devDependencies": {
+    "prettier": "^3.3.0",
+    "typescript": "^5.5.0"
+  }
+}

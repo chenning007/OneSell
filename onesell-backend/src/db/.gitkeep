@@ -1,0 +1,5 @@
+// Database schema — Drizzle ORM
+// Implemented in M0 (schema) / M1 (migrations)
+// Tables: users, user_preferences, analysis_sessions, saved_products
+// See docs/ARCHITECTURE.md §8 for full data model
+export {};

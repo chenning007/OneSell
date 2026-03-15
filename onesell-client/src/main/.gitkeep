@@ -1,0 +1,11 @@
+// Electron Main Process entry point
+// Implemented in M1. See docs/ARCHITECTURE.md §4.1
+//
+// Responsibilities:
+//   - Create BrowserWindow (renderer)
+//   - Create BrowserView (authenticated platform sessions)
+//   - Register IPC handlers (src/main/ipc/handlers.ts)
+//   - ExtractionManager, PayloadBuilder, BackendClient, SessionStore
+//
+// SECURITY (P1): this process never captures, stores, or transmits credentials.
+export {};

@@ -7,53 +7,45 @@
 # Format: <pattern>  <@github-username or @org/team>
 # The LAST matching pattern wins (GitHub evaluation order).
 #
-# PLACEHOLDER: Replace @pm-handle, @architect-handle, @dev-lead-handle,
-# @tester-handle with actual GitHub usernames or team slugs.
-# e.g.  @org/architects  or  @chenning007
+# The human owner @chenning007 is the final reviewer for all paths until
+# the team expands. Replace role-specific handles with team members as they join.
+# e.g.  @org/architects  or individual GitHub usernames
 
-# ─── Default: all files require architect + dev-lead review ───────────────
-*                          @architect-handle @dev-lead-handle
+# ─── Default: human owner reviews everything ──────────────────────────────
+*                          @chenning007
 
 # ─── Product / PRD — PM owns ──────────────────────────────────────────────
-docs/PRD-*.md              @pm-handle
-docs/PROJECT-MANAGEMENT.md @pm-handle
+docs/PRD-*.md              @chenning007
+docs/PROJECT-MANAGEMENT.md @chenning007
 
 # ─── Architecture — Architect owns ───────────────────────────────────────
-docs/ARCHITECTURE.md       @architect-handle
-docs/architecture/         @architect-handle
-docs/guides/               @architect-handle
+docs/ARCHITECTURE.md       @chenning007
+docs/architecture/         @chenning007
+docs/guides/               @chenning007
 
-# ─── Copilot & workflow config — Architect + Dev Lead own ────────────────
-.github/copilot-instructions.md   @architect-handle @pm-handle
-.github/instructions/             @architect-handle
-.github/workflows/                @architect-handle @dev-lead-handle
-.github/ISSUE_TEMPLATE/           @pm-handle
+# ─── Copilot & workflow config — human owner reviews all changes ──────────
+.github/copilot-instructions.md   @chenning007
+.github/instructions/             @chenning007
+.github/workflows/                @chenning007
+.github/ISSUE_TEMPLATE/           @chenning007
 
-# ─── Client extraction layer — security-critical, Architect must review ──
-onesell-client/src/main/extraction/ExtractionManager.ts   @architect-handle
-onesell-client/src/main/extraction/ExtractionScriptRegistry.ts  @architect-handle
-onesell-client/src/main/extraction/scripts/               @dev-lead-handle
-onesell-client/src/main/ipc/                              @architect-handle
-onesell-client/src/shared/                                @architect-handle
+# ─── Client extraction layer — security-critical ──────────────────────────
+onesell-client/src/main/extraction/ExtractionManager.ts   @chenning007
+onesell-client/src/main/extraction/ExtractionScriptRegistry.ts  @chenning007
+onesell-client/src/main/ipc/                              @chenning007
+onesell-client/src/shared/                                @chenning007
 
-# ─── Backend agent pipeline — Architect must review all LLM/tool changes ─
-onesell-backend/src/services/agent/                       @architect-handle
-onesell-backend/src/services/agent/tools/                 @architect-handle @dev-lead-handle
-onesell-backend/src/services/agent/prompts/               @architect-handle @pm-handle
+# ─── Backend agent pipeline — LLM/tool changes ────────────────────────────
+onesell-backend/src/services/agent/                       @chenning007
+onesell-backend/src/services/agent/prompts/               @chenning007
 
-# ─── Backend API / auth / rate-limit — security-critical ─────────────────
-onesell-backend/src/api/middleware/                        @architect-handle
-onesell-backend/src/api/routes/                            @dev-lead-handle
+# ─── Backend API / auth / rate-limit — security-critical ──────────────────
+onesell-backend/src/api/middleware/                        @chenning007
 
-# ─── Data schema and migrations — Architect must review ──────────────────
-onesell-backend/src/db/                                    @architect-handle
-onesell-backend/migrations/                                @architect-handle
+# ─── Data schema and migrations ───────────────────────────────────────────
+onesell-backend/src/db/                                    @chenning007
+onesell-backend/migrations/                                @chenning007
 
-# ─── Market config — PM + Architect must review for new markets ──────────
-onesell-backend/src/services/market/                       @pm-handle @architect-handle
-onesell-client/src/renderer/i18n/                          @pm-handle
-
-# ─── Test files — Tester lead reviews ────────────────────────────────────
-tests/                     @tester-handle
-onesell-client/tests/      @tester-handle
-onesell-backend/tests/     @tester-handle
+# ─── Market config ─────────────────────────────────────────────────────────
+onesell-backend/src/services/market/                       @chenning007
+onesell-client/src/renderer/i18n/                          @chenning007

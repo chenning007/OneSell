@@ -1,0 +1,14 @@
+// Platform extraction scripts — one directory per platform
+// Each implements the ExtractionScript interface from docs/ARCHITECTURE.md §4.3
+//
+// Implemented in M1 (US) and M4 (CN):
+//   amazon-us/    — Amazon US extraction
+//   google-trends/ — Google Trends extraction
+//   alibaba/      — Alibaba supplier search (US market sourcing signal)
+//   taobao/       — Taobao (CN market, M4)
+//   jd/           — JD.com (CN market, M4)
+//   shopee/       — Shopee (SEA market)
+//
+// To add a new platform: create [platform-id]/index.ts, implement ExtractionScript,
+// register in ExtractionScriptRegistry. No other files change.
+export {};

@@ -1,0 +1,5 @@
+// Market-specific system prompts for the Agent Service
+// One file per market: us.prompt.ts, cn.prompt.ts, sea.prompt.ts, etc.
+// Implemented in M2 (US) and M4 (CN).
+// See docs/ARCHITECTURE.md §7 and docs/PRD §8 for prompt requirements.
+export {};

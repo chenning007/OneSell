@@ -1,0 +1,4 @@
+// User Service — account management, preferences, saved product lists
+// Implemented in M1. See docs/ARCHITECTURE.md §6.1
+// SECURITY: all queries filter by userId from JWT — never from request body
+export {};
