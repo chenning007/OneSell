@@ -2,14 +2,18 @@ import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import App from '../../src/renderer/App.js';
 
-describe('App (placeholder)', () => {
-  it('renders the product heading', () => {
+describe('App', () => {
+  it('renders the market selection screen on step 1', () => {
     render(<App />);
-    expect(screen.getByRole('heading', { name: /OneSell Scout/i })).toBeTruthy();
+    // Step 1 shows MarketSelection component
+    expect(screen.getByRole('heading', { level: 1 })).toBeTruthy();
   });
 
-  it('renders the placeholder tagline', () => {
+  it('renders market tiles for all 7 markets', () => {
     render(<App />);
-    expect(screen.getByText(/Finding the right products for you/i)).toBeTruthy();
+    // All 7 market flags should be visible
+    expect(screen.getByText('🇺🇸')).toBeTruthy();
+    expect(screen.getByText('🇨🇳')).toBeTruthy();
+    expect(screen.getByText('🇬🇧')).toBeTruthy();
   });
 });
