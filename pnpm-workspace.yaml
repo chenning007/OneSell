@@ -1,3 +1,6 @@
 packages:
   - onesell-client
   - onesell-backend
+allowBuilds:
+  electron: true
+  esbuild: true
