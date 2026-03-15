@@ -84,6 +84,7 @@ const en = {
     description: 'Open each platform to log in and collect data. Your credentials never leave this device.',
     connect: 'Connect',
     close: 'Close',
+    startExtraction: 'Start Extraction',
     status: {
       idle: 'Idle',
       connected: 'Connected',

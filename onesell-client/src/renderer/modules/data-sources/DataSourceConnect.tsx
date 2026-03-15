@@ -18,6 +18,7 @@ const POLL_INTERVAL_MS = 2000;
 export default function DataSourceConnect(): React.ReactElement {
   const { t } = useTranslation();
   const market = useWizardStore((s) => s.market);
+  const setStep = useWizardStore((s) => s.setStep);
   const platforms: readonly string[] = market?.platforms ?? [];
 
   const [platformStates, setPlatformStates] = useState<Record<string, PlatformState>>(() =>
@@ -92,6 +93,8 @@ export default function DataSourceConnect(): React.ReactElement {
     [setStatus, stopPolling],
   );
 
+  const connectedCount = Object.values(platformStates).filter((s) => s.status === 'connected').length;
+
   return (
     <div style={{ fontFamily: 'system-ui, sans-serif', padding: '24px' }}>
       <h2>{t('dataSources.title')}</h2>
@@ -161,6 +164,26 @@ export default function DataSourceConnect(): React.ReactElement {
           );
         })}
       </ul>
+
+      {/* Start Extraction button — enabled once at least one platform is connected */}
+      <div style={{ marginTop: '32px', display: 'flex', justifyContent: 'flex-end' }}>
+        <button
+          onClick={() => { setStep(8); }}
+          disabled={connectedCount === 0}
+          style={{
+            padding: '12px 32px',
+            borderRadius: '8px',
+            border: 'none',
+            background: connectedCount > 0 ? '#0066cc' : '#ccc',
+            color: '#fff',
+            fontSize: '16px',
+            fontWeight: 600,
+            cursor: connectedCount > 0 ? 'pointer' : 'not-allowed',
+          }}
+        >
+          {t('dataSources.startExtraction', { defaultValue: 'Start Extraction' })}
+        </button>
+      </div>
     </div>
   );
 }

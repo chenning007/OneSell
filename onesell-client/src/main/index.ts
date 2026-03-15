@@ -3,6 +3,10 @@ import path from 'path';
 import { ExtractionManager } from './extraction/ExtractionManager.js';
 import { PayloadBuilder } from './extraction/PayloadBuilder.js';
 import { registerIpcHandlers } from './ipc/handlers.js';
+// Import extraction scripts so they self-register with the registry on startup
+import './extraction/scripts/amazon-us/index.js';
+import './extraction/scripts/google-trends/index.js';
+import './extraction/scripts/alibaba/index.js';
 
 const isDev = process.env['NODE_ENV'] === 'development';
 

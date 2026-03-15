@@ -84,6 +84,7 @@ const zhCn = {
     description: '打开每个平台进行登录和数据采集。您的凭据不会离开本设备。',
     connect: '连接',
     close: '关闭',
+    startExtraction: '开始提取',
     status: {
       idle: '未连接',
       connected: '已连接',

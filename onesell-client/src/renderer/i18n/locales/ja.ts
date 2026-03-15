@@ -84,6 +84,7 @@ const ja = {
     description: '各プラットフォームを開いてログインし、データを収集します。資格情報はこのデバイスから出ることはありません。',
     connect: '接続',
     close: '閉じる',
+    startExtraction: '抽出開始',
     status: {
       idle: '未接続',
       connected: '接続済み',

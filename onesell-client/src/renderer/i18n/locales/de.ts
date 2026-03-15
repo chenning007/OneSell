@@ -84,6 +84,7 @@ const de = {
     description: 'Öffnen Sie jede Plattform, um sich anzumelden und Daten zu sammeln. Ihre Zugangsdaten verlassen dieses Gerät nicht.',
     connect: 'Verbinden',
     close: 'Schließen',
+    startExtraction: 'Extraktion starten',
     status: {
       idle: 'Inaktiv',
       connected: 'Verbunden',
