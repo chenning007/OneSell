@@ -79,6 +79,17 @@ const en = {
     pets: 'Pets',
     books: 'Books',
   },
+  dataSources: {
+    title: 'Connect Data Sources',
+    description: 'Open each platform to log in and collect data. Your credentials never leave this device.',
+    connect: 'Connect',
+    close: 'Close',
+    status: {
+      idle: 'Idle',
+      connected: 'Connected',
+      extracting: 'Extracting…',
+    },
+  },
 } as const;
 
 export default en;

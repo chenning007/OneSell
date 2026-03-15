@@ -2,6 +2,7 @@ import React from 'react';
 import { useWizardStore } from './store/wizardStore.js';
 import MarketSelection from './modules/wizard/MarketSelection.js';
 import Wizard from './modules/wizard/Wizard.js';
+import DataSourceConnect from './modules/data-sources/DataSourceConnect.js';
 
 export default function App(): React.ReactElement {
   const { currentStep } = useWizardStore();
@@ -12,6 +13,10 @@ export default function App(): React.ReactElement {
 
   if (currentStep >= 2 && currentStep <= 6) {
     return <Wizard />;
+  }
+
+  if (currentStep === 7) {
+    return <DataSourceConnect />;
   }
 
   return (

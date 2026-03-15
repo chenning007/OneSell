@@ -79,6 +79,17 @@ const de = {
     pets: 'Haustiere',
     books: 'Bücher',
   },
+  dataSources: {
+    title: 'Datenquellen verbinden',
+    description: 'Öffnen Sie jede Plattform, um sich anzumelden und Daten zu sammeln. Ihre Zugangsdaten verlassen dieses Gerät nicht.',
+    connect: 'Verbinden',
+    close: 'Schließen',
+    status: {
+      idle: 'Inaktiv',
+      connected: 'Verbunden',
+      extracting: 'Wird extrahiert…',
+    },
+  },
 } as const;
 
 export default de;

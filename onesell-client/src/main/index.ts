@@ -1,9 +1,11 @@
 import { app, BrowserWindow } from 'electron';
 import path from 'path';
+import { ExtractionManager } from './extraction/ExtractionManager.js';
+import { registerIpcHandlers } from './ipc/handlers.js';
 
 const isDev = process.env['NODE_ENV'] === 'development';
 
-function createWindow(): void {
+function createWindow(): BrowserWindow {
   const win = new BrowserWindow({
     width: 1280,
     height: 800,
@@ -23,10 +25,19 @@ function createWindow(): void {
     // Production: load built renderer
     void win.loadFile(path.join(__dirname, '../renderer/index.html'));
   }
+
+  return win;
 }
 
 app.whenReady().then(() => {
-  createWindow();
+  const win = createWindow();
+
+  const manager = new ExtractionManager(win);
+  registerIpcHandlers(win, manager);
+
+  win.on('closed', () => {
+    manager.destroyAll();
+  });
 
   app.on('activate', () => {
     // macOS: re-create window when dock icon is clicked with no open windows

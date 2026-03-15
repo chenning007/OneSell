@@ -79,6 +79,17 @@ const zhCn = {
     pets: '宠物',
     books: '图书',
   },
+  dataSources: {
+    title: '连接数据源',
+    description: '打开每个平台进行登录和数据采集。您的凭据不会离开本设备。',
+    connect: '连接',
+    close: '关闭',
+    status: {
+      idle: '未连接',
+      connected: '已连接',
+      extracting: '采集中…',
+    },
+  },
 } as const;
 
 export default zhCn;

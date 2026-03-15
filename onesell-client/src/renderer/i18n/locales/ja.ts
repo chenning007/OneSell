@@ -79,6 +79,17 @@ const ja = {
     pets: 'ペット',
     books: '書籍',
   },
+  dataSources: {
+    title: 'データソースに接続',
+    description: '各プラットフォームを開いてログインし、データを収集します。資格情報はこのデバイスから出ることはありません。',
+    connect: '接続',
+    close: '閉じる',
+    status: {
+      idle: '未接続',
+      connected: '接続済み',
+      extracting: '取得中…',
+    },
+  },
 } as const;
 
 export default ja;
