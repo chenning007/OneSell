@@ -66,6 +66,7 @@ The PM owns the product — what it is, who it serves, and whether it is working
 The Architect owns the technical design — how the system is built, how components connect, and where the boundaries are.
 
 - **System design** — produces architecture decision records (ADRs) and sequence diagrams; committed to `/docs/architecture/`
+- **PRD → Task decomposition** — breaks PRD features into properly-granular Dev tasks (1–3 day scope, single responsibility, testable in isolation) and paired Test tasks with dependency ordering; produces a Task Decomposition Table for PM to create issues from
 - **API contracts** — defines request/response schemas for all service boundaries before Dev implements them
 - **Data schemas** — designs the database schema (PostgreSQL) and cache strategy (Redis)
 - **Security design** — owns the threat model; reviews every feature that touches credentials, data retention, or external APIs
