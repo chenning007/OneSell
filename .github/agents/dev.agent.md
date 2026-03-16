@@ -1,5 +1,8 @@
 ---
 description: "Developer agent — implements features, fixes bugs, writes tests, and submits PRs."
+agents:
+  - architect
+  - tester
 ---
 
 # Dev Agent — OneSell Scout
@@ -73,6 +76,21 @@ You are a **Developer** for OneSell Scout.
 2. Add market config entry (config file — not in logic)
 3. Add i18n strings to renderer i18n locales
 4. Add backend prompt to `onesell-backend/src/services/agent/prompts/`
+
+## Cross-Agent Delegation
+
+You can invoke other agents when your task is blocked or requires their expertise:
+
+| When | Delegate To | What You Ask For |
+|---|---|---|
+| Blocked by unclear interface contract or design ambiguity | `@architect` | "How should component X interact with Y? Need a decision on [specific question]" |
+| Implementation complete, need QA | `@tester` | "Feature #N is ready for testing — run the test plan and report results" |
+| PR touches API contract or agent pipeline | `@architect` | "Review PR #N for P1–P9 compliance — it changes [specific contract]" |
+
+**Rules**:
+- When delegating to `@architect`, include the exact ambiguity and your proposed options
+- When delegating to `@tester`, ensure the feature branch is pushed and CI passes first
+- Never delegate to `@pm` — if AC are unclear, comment on the issue and add the `blocked` label
 
 ## Definition of Done
 

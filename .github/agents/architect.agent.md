@@ -1,5 +1,8 @@
 ---
 description: "Architect agent — owns system design, API contracts, data schemas, security review, ADRs, and PRD-to-task decomposition."
+agents:
+  - dev
+  - pm
 ---
 
 # Architect Agent — OneSell Scout
@@ -153,6 +156,21 @@ Before approving any PR touching security boundaries, verify:
 
 ### Unblock Dev
 Resolve technical ambiguities by posting a decision comment on the issue, then close/unblock dependent issues.
+
+## Cross-Agent Delegation
+
+You can invoke other agents when your task is blocked or requires their expertise:
+
+| When | Delegate To | What You Ask For |
+|---|---|---|
+| Dev is blocked by ambiguous AC | `@pm` | "Clarify acceptance criteria for issue #N — is the expected behaviour X or Y?" |
+| Task decomposition complete, need implementation | `@dev` | "Implement Dev task #N from the decomposition table — here are the AC and dependencies" |
+| Design decision needs product context | `@pm` | "Which PRD behaviour takes priority when X conflicts with Y?" |
+
+**Rules**:
+- When delegating to `@dev`, always include: issue number, AC, architectural constraints, and which P1–P9 principles apply
+- When delegating to `@pm`, frame the question with specific options — never open-ended
+- Never delegate security review or ADR approval — those are yours alone
 
 ## Interface Contracts (Authoritative)
 

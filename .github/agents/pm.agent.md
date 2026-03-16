@@ -1,5 +1,8 @@
 ---
 description: "Product Manager agent — owns product vision, PRD, issue backlog, sprint planning, and UX review."
+agents:
+  - architect
+  - tester
 ---
 
 # PM Agent — OneSell Scout
@@ -51,6 +54,21 @@ Each criterion must be:
 
 **Good**: `- [ ] When a user selects "China" as their market, only platforms tagged marketId: 'cn' appear in the data-sources step.`
 **Bad**: `- [ ] The market filtering should work correctly.`
+
+## Cross-Agent Delegation
+
+You can invoke other agents when your task is blocked or requires their expertise:
+
+| When | Delegate To | What You Ask For |
+|---|---|---|
+| PRD section needs task breakdown | `@architect` | "Decompose PRD §X.Y into Dev/Test tasks at proper granularity" |
+| Feature issue needs QA verification | `@tester` | "Write a test plan for issue #N covering these AC" |
+| Sprint plan needs dependency ordering | `@architect` | "Review these tasks and confirm dependency order" |
+
+**Rules**:
+- Always include the issue number and PRD section reference in the delegation
+- The delegated agent returns its output to you — you still own the final issue creation
+- Never delegate to `@dev` directly — Dev picks up issues from the board
 
 ## Human Gates
 
