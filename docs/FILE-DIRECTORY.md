@@ -8,11 +8,11 @@
 
 ---
 
-## 1. Start Here — Human Manager
+## 1. Start Here — Everyone
 
 | File | Primary User | What it is | How to use it |
 |---|---|---|---|
-| [docs/HUMAN-MANAGER-PLAYBOOK.md](HUMAN-MANAGER-PLAYBOOK.md) | 👤 Human | Your complete operating guide | **Read this first.** Covers how to start the project, all 4 gates where you must act, quick-reference response templates, and warning signs. |
+| [docs/HUMAN-MANAGER-PLAYBOOK.md](HUMAN-MANAGER-PLAYBOOK.md) | All participants | Collaboration playbook for the entire team | **Read this first.** Covers who does what, when, the continuous collaboration loop (Steps ①–⑪), all 4 human gates, how every participant finds their work, and how to keep the pipeline flowing. |
 | [README.md](../README.md) | 👤 Human · all agents | Project overview and repo map | Orientation doc — explains what OneSell Scout is and where everything lives. |
 
 ---
@@ -61,7 +61,22 @@
 | [.github/instructions/architect.instructions.md](../.github/instructions/architect.instructions.md) | 🏗️Arch | Architect-specific Copilot rules | Auto-applied when Copilot works on `docs/architecture/**`. Contains P1–P9 enforcement checklist, ADR process, interface contract reference, security review checklist. |
 | [.github/instructions/dev.instructions.md](../.github/instructions/dev.instructions.md) | 👨‍💻Dev | Dev-specific Copilot rules | Auto-applied when Copilot works on `onesell-client/**` or `onesell-backend/**`. Contains full DoD checklist, code standards, extension patterns. |
 | [.github/instructions/tester.instructions.md](../.github/instructions/tester.instructions.md) | 🧪Test | Tester-specific Copilot rules | Auto-applied when Copilot works on `tests/**`. Contains principle-to-test mapping, test category guide, sign-off gate rules. |
+### Custom Agents (invoke with `@agent-name` in VS Code Copilot Chat)
 
+| File | Primary User | What it is | How to use it |
+|---|---|---|---|
+| [.github/agents/pm.agent.md](../.github/agents/pm.agent.md) | 🤖PM | PM agent definition | Use `@pm` in Copilot Chat to activate the PM agent with pre-configured tool access for issue creation and sprint planning. |
+| [.github/agents/architect.agent.md](../.github/agents/architect.agent.md) | 🏗️Arch | Architect agent definition | Use `@architect` in Copilot Chat for ADR creation, architecture reviews, and security reviews. |
+| [.github/agents/dev.agent.md](../.github/agents/dev.agent.md) | 👨‍💻Dev | Developer agent definition | Use `@dev` in Copilot Chat for feature implementation, test writing, and PR preparation. |
+| [.github/agents/tester.agent.md](../.github/agents/tester.agent.md) | 🧪 Test | Tester agent definition | Use `@tester` in Copilot Chat for test plan creation, test execution, and QA sign-off. |
+
+### Custom Skills (auto-referenced by agents and prompts)
+
+| File | Primary User | What it is | How to use it |
+|---|---|---|---|
+| [.github/skills/architecture-review/SKILL.md](../.github/skills/architecture-review/SKILL.md) | 🏗️Arch · 👨‍💻Dev | Architecture review skill | Provides the full P1–P9 compliance checklist and structured review report template. Referenced by `@architect` agent and `/architect-review` prompt. |
+| [.github/skills/issue-triage/SKILL.md](../.github/skills/issue-triage/SKILL.md) | 🤖PM | Issue triage skill | Validates issues have all required labels, AC quality, and dependencies. Referenced by `@pm` agent and `/pm-create-feature-issue` prompt. |
+| [.github/skills/extraction-script/SKILL.md](../.github/skills/extraction-script/SKILL.md) | 👨‍💻Dev · 🧪 Test | Extraction script skill | Step-by-step patterns for creating extraction scripts with safe DOM queries and test fixtures. Referenced by `@dev` agent and `/dev-implement-feature` prompt. |
 ### Agent Prompt Files (invoke with `/` in VS Code Copilot Chat)
 
 | File | Primary User | What it is | How to use it |
@@ -83,6 +98,7 @@
 | [.github/ISSUE_TEMPLATE/test-plan.yml](../.github/ISSUE_TEMPLATE/test-plan.yml) | 🤖PM · 🧪Test | Template C — test plan issue | PM creates for every epic/feature; Tester fills in the test cases and execution findings. Must be created **before** Dev finishes implementation. |
 | [.github/ISSUE_TEMPLATE/bug-report.yml](../.github/ISSUE_TEMPLATE/bug-report.yml) | 🧪Test · 👨‍💻Dev | Template D — bug report | Used whenever a test fails or a defect is found. Includes severity, steps to reproduce, and a dropdown for which architectural principle was violated (if any). |
 | [.github/ISSUE_TEMPLATE/question.yml](../.github/ISSUE_TEMPLATE/question.yml) | All agents | Template E — open question blocking progress | Any agent creates this when a decision is needed before work can continue. Auto-labels `role:pm`. PM resolves within 1 business day. |
+| [.github/ISSUE_TEMPLATE/chore.yml](../.github/ISSUE_TEMPLATE/chore.yml) | 👨‍💻Dev | Template F — chore / tooling | Used for build system changes, config updates, CI/CD tweaks, or dependency upgrades. Auto-labels `type:chore`. |
 
 ---
 
@@ -132,10 +148,20 @@
 | [docker-compose.yml](../docker-compose.yml) | 👨‍💻Dev | Local dev database + cache | Dev agents (and you) run `docker compose up -d` to start Postgres 16 + Redis 7 locally before running integration tests or the backend dev server. |
 | [.env.example](../.env.example) | 👨‍💻Dev | All required environment variables | Copy to `.env` and fill in real values. Shows every variable the backend needs (DB URL, Redis URL, JWT keys, LLM API keys). Never commit the `.env` file — it's in `.gitignore`. |
 | [.gitignore](../.gitignore) | ⚙️Auto | Files git never tracks | Excludes `node_modules/`, `dist/`, `.env`, logs. No editing needed. |
+| [.github/dependabot.yml](../.github/dependabot.yml) | ⚙️Auto | Automated dependency updates | Dependabot opens PRs weekly for outdated npm packages and GitHub Actions. PRs are auto-labeled `type:chore`. |
 
 ---
 
-## 12. Backend Source (skeleton — implemented by Dev agents in M0–M2)
+## 12. VS Code Workspace Configuration
+
+| File | Primary User | What it is | How to use it |
+|---|---|---|---|
+| [.vscode/settings.json](../.vscode/settings.json) | All agents · 👤 Human | Shared editor settings | Auto-format on save with Prettier, ESLint fix on save, TypeScript SDK pointing to workspace version. No action needed — VS Code applies these automatically. |
+| [.vscode/extensions.json](../.vscode/extensions.json) | 👤 Human | Recommended extensions | VS Code prompts to install these on first open. Includes ESLint, Prettier, Copilot, GitLens, Vitest Explorer, and Playwright. |
+
+---
+
+## 13. Backend Source (skeleton — implemented by Dev agents in M0–M2)
 
 | File / Directory | Primary User | What it is | How to use it |
 |---|---|---|---|
@@ -190,16 +216,16 @@
 ## Quick-Access Summary by Role
 
 ### 👤 If you are the Human Manager
-Start with [HUMAN-MANAGER-PLAYBOOK.md](HUMAN-MANAGER-PLAYBOOK.md). Your daily interaction is: receive GitHub email → click link → read → Approve or post a comment → done.
+Start with [HUMAN-MANAGER-PLAYBOOK.md](HUMAN-MANAGER-PLAYBOOK.md). Your daily interaction is: receive GitHub email → click link → read → Approve or post a comment → done. See Part 5 and Part 8 of the playbook for finding work and gate response templates.
 
 ### 🤖 If you are the PM Agent
-Read in order: [copilot-instructions.md](../.github/copilot-instructions.md) → [PROJECT-MANAGEMENT.md](PROJECT-MANAGEMENT.md) → [PRD-Product-Selection-Module.md](PRD-Product-Selection-Module.md). Use `/pm-create-feature-issue` prompt to create issues. Your instruction file is [pm.instructions.md](../.github/instructions/pm.instructions.md).
+Activate with `@pm` in VS Code. Read in order: [copilot-instructions.md](../.github/copilot-instructions.md) → [PROJECT-MANAGEMENT.md](PROJECT-MANAGEMENT.md) → [PRD-Product-Selection-Module.md](PRD-Product-Selection-Module.md). Use `/pm-create-feature-issue` to create issues and `/pm-sprint-planning` to plan milestones. Your instruction file is [pm.instructions.md](../.github/instructions/pm.instructions.md). Skill: `issue-triage`.
 
 ### 🏗️ If you are the Architect Agent
-Read in order: [copilot-instructions.md](../.github/copilot-instructions.md) → [PROJECT-MANAGEMENT.md](PROJECT-MANAGEMENT.md) → [ARCHITECTURE.md](ARCHITECTURE.md). Use the [ADR-template.md](architecture/ADR-template.md) for every decision. Use `/architect-review` prompt for PR reviews. Your instruction file is [architect.instructions.md](../.github/instructions/architect.instructions.md).
+Activate with `@architect` in VS Code. Read in order: [copilot-instructions.md](../.github/copilot-instructions.md) → [PROJECT-MANAGEMENT.md](PROJECT-MANAGEMENT.md) → [ARCHITECTURE.md](ARCHITECTURE.md). Use `/architect-review` for PR reviews and the [ADR-template.md](architecture/ADR-template.md) for decisions. Your instruction file is [architect.instructions.md](../.github/instructions/architect.instructions.md). Skill: `architecture-review`.
 
 ### 👨‍💻 If you are the Dev Agent
-Read in order: [copilot-instructions.md](../.github/copilot-instructions.md) → [PROJECT-MANAGEMENT.md](PROJECT-MANAGEMENT.md) → [ARCHITECTURE.md](ARCHITECTURE.md) → [DEVELOPER-GUIDE.md](guides/DEVELOPER-GUIDE.md). Use `/dev-implement-feature` prompt to implement issues. Your instruction file is [dev.instructions.md](../.github/instructions/dev.instructions.md).
+Activate with `@dev` in VS Code. Read in order: [copilot-instructions.md](../.github/copilot-instructions.md) → [PROJECT-MANAGEMENT.md](PROJECT-MANAGEMENT.md) → [ARCHITECTURE.md](ARCHITECTURE.md) → [DEVELOPER-GUIDE.md](guides/DEVELOPER-GUIDE.md). Use `/dev-implement-feature` to implement issues and `/dev-code-review` to review PRs. Your instruction file is [dev.instructions.md](../.github/instructions/dev.instructions.md). Skills: `architecture-review`, `extraction-script`.
 
 ### 🧪 If you are the Tester Agent
-Read in order: [copilot-instructions.md](../.github/copilot-instructions.md) → [PROJECT-MANAGEMENT.md](PROJECT-MANAGEMENT.md) → [ARCHITECTURE.md](ARCHITECTURE.md) → [TESTER-GUIDE.md](guides/TESTER-GUIDE.md). Use `/tester-write-test-plan` prompt to write test plans. Your instruction file is [tester.instructions.md](../.github/instructions/tester.instructions.md).
+Activate with `@tester` in VS Code. Read in order: [copilot-instructions.md](../.github/copilot-instructions.md) → [PROJECT-MANAGEMENT.md](PROJECT-MANAGEMENT.md) → [ARCHITECTURE.md](ARCHITECTURE.md) → [TESTER-GUIDE.md](guides/TESTER-GUIDE.md). Use `/tester-write-test-plan` for test plans and `/tester-execute-tests` for execution. Your instruction file is [tester.instructions.md](../.github/instructions/tester.instructions.md). Skill: `extraction-script`.

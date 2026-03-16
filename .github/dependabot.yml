@@ -1,0 +1,101 @@
+version: 2
+
+updates:
+  # Root monorepo dependencies
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    labels:
+      - "type:chore"
+      - "role:dev"
+      - "epic:foundation"
+      - "P3"
+    commit-message:
+      prefix: "chore(deps):"
+    groups:
+      typescript:
+        patterns:
+          - "typescript"
+          - "@types/*"
+      prettier:
+        patterns:
+          - "prettier"
+
+  # Client package dependencies
+  - package-ecosystem: "npm"
+    directory: "/onesell-client"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    labels:
+      - "type:chore"
+      - "role:dev"
+      - "epic:foundation"
+      - "P3"
+    commit-message:
+      prefix: "chore(deps-client):"
+    groups:
+      electron:
+        patterns:
+          - "electron"
+          - "electron-*"
+      react:
+        patterns:
+          - "react"
+          - "react-dom"
+          - "@types/react*"
+      vite:
+        patterns:
+          - "vite"
+          - "vite-*"
+          - "@vitejs/*"
+      vitest:
+        patterns:
+          - "vitest"
+          - "@vitest/*"
+
+  # Backend package dependencies
+  - package-ecosystem: "npm"
+    directory: "/onesell-backend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    labels:
+      - "type:chore"
+      - "role:dev"
+      - "epic:foundation"
+      - "P3"
+    commit-message:
+      prefix: "chore(deps-backend):"
+    groups:
+      fastify:
+        patterns:
+          - "fastify"
+          - "@fastify/*"
+      drizzle:
+        patterns:
+          - "drizzle-*"
+      vitest:
+        patterns:
+          - "vitest"
+          - "@vitest/*"
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 3
+    labels:
+      - "type:chore"
+      - "role:dev"
+      - "epic:foundation"
+      - "P3"
+    commit-message:
+      prefix: "chore(actions):"

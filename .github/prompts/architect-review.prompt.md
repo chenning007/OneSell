@@ -1,5 +1,5 @@
 ---
-mode: agent
+agent: architect
 description: "Architect task: review a PR or design and verify compliance with the 9 architectural principles."
 ---
 

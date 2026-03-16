@@ -98,6 +98,15 @@ Before opening a PR:
 4. Add DOM fixture tests
 5. No changes to `ExtractionManager` required
 
+> **Tip**: Use the `extraction-script` skill for detailed implementation patterns and safe DOM query helpers.
+
+## Related Copilot Resources
+
+- **Agent**: Use `@dev` in VS Code Copilot Chat to activate the Developer agent with pre-configured tool access
+- **Prompt**: Use `/dev-implement-feature` for guided feature implementation with DoD reminders
+- **Skill**: The `architecture-review` skill helps you self-review P1–P9 compliance before submitting a PR
+- **Skill**: The `extraction-script` skill contains step-by-step patterns for new platform scripts
+
 ### New Market
 1. Add `marketId` to `MarketContext` union type
 2. Add market entry to market config (config, not code)

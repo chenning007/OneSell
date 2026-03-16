@@ -22,6 +22,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
       ipcRenderer.invoke('extraction:run', platformId),
     getCurrentUrl: (platformId: string) =>
       ipcRenderer.invoke('extraction:get-url', platformId),
+    getOpenPlatforms: () =>
+      ipcRenderer.invoke('extraction:get-open-platforms') as Promise<string[]>,
+    hideAll: () =>
+      ipcRenderer.invoke('extraction:hide-all'),
   },
   payload: {
     build: (sessionId: string, preferences: unknown, rawResults: unknown) =>

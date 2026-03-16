@@ -45,8 +45,8 @@ export const etsyScript: ExtractionScript = {
 
       const reviewEl =
         item.querySelector('.shop2-rating-count') ??
-        item.querySelector('[class*="review-count"]') ??
-        item.querySelector('[class*="reviewCount"]');
+        item.querySelector('[class*="review"]') ??
+        item.querySelector('[class*="ReviewCount"]');
       const reviewText = reviewEl ? reviewEl.textContent ?? '' : '';
       const reviewMatch = reviewText.match(/([\d,]+)/);
       const reviewCount = reviewMatch ? parseInt(reviewMatch[1].replace(/,/g, ''), 10) : 0;

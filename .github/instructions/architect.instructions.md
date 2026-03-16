@@ -72,3 +72,9 @@ Changes to these files require Architect review and an associated ADR:
 - Any file defining `MarketContext`, `ExtractionScript`, `AnalysisPayload`, or `ProductRecord`
 - `onesell-backend/src/services/agent/` (Agent pipeline)
 - `onesell-client/src/main/extraction/` (Extraction interfaces)
+
+## Related Copilot Resources
+
+- **Agent**: Use `@architect` in VS Code Copilot Chat to activate the Architect agent with pre-configured tool access
+- **Prompt**: Use `/architect-review` for structured P1–P9 compliance review with findings table output
+- **Skill**: The `architecture-review` skill provides the full checklist and report template

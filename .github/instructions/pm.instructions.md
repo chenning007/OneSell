@@ -35,7 +35,7 @@ Each criterion must be:
 - Unambiguous — one interpretation only
 - Traceable to a PRD section
 
-**Good**: `- [ ] When a user selects "China" as their market, only platforms tagged marketId: 'cn' appear in the data-sources step.`  
+**Good**: `- [ ] When a user selects "China" as their market, only platforms tagged marketId: 'cn' appear in the data-sources step.`
 **Bad**: `- [ ] The market filtering should work correctly.`
 
 ## Label Reference
@@ -58,3 +58,9 @@ When updating the PRD:
 - Make architectural decisions (raise a `type:question role:architect` issue instead)
 - Create `release/*` branches (PM creates these, but does it via GitHub UI or git CLI — do not use Copilot to create release branches without PM confirmation)
 - Close issues without Tester `✅ QA passed` comment (for implementation issues)
+
+## Related Copilot Resources
+
+- **Agent**: Use `@pm` in VS Code Copilot Chat to activate the PM agent with pre-configured tool access
+- **Prompt**: Use `/pm-create-feature-issue` to generate a fully-formed issue body from a PRD section
+- **Skill**: The `issue-triage` skill validates issues have all required labels, AC quality, and dependencies

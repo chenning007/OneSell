@@ -58,6 +58,7 @@ function makeScript(platformId: string, marketId: string): ExtractionScript {
     platformId,
     marketId,
     version: '1.0.0',
+    homeUrl: `https://${platformId}.example.com`,
     getNavigationTargets: () => [],
     extractFromPage: (_doc: Document, url: string) => makeRaw(platformId),
     normalizeData: (raw: RawPlatformData[]) => makeNormalized(platformId, marketId),

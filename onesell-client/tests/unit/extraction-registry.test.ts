@@ -12,6 +12,7 @@ function makeScript(platformId: string, marketId: string): ExtractionScript {
     platformId,
     marketId,
     version: '1.0.0',
+    homeUrl: `https://example.com/${platformId}`,
     getNavigationTargets(_keyword: string, _market: MarketContext): string[] {
       return [`https://example.com/${platformId}`];
     },

@@ -1,336 +1,511 @@
-# OneSell Scout — Human Manager Playbook
+# OneSell Scout — Collaboration Playbook
 
-**Who this is for**: You, `@chenning007` — the human owner of this project.  
-**What it covers**: How to start the project, when AI agents need you, exactly what to do at each gate, and how to stay in control without micromanaging.  
-**Version**: 1.0 | **Date**: 2026-03-15
+**Who this is for**: Everyone — the human owner (`@chenning007`), all four AI agents (PM, Architect, Dev, Tester), and GitHub automation (CI, Dependabot, human-gate workflows).  
+**What it covers**: Who does what, when to do it, what triggers the next step, and how the whole team keeps the project moving continuously.  
+**Version**: 2.0 | **Date**: 2026-03-16
 
 ---
 
 ## The One-Line Summary
 
-> You make **decisions**. AI agents do **work**. GitHub Issues are the handshake between you and them.
-
-The agents run 24/7 and coordinate through GitHub Issues and Pull Requests. They stop and wait at exactly four types of decision — and they will email you (or Slack you) the moment they need you. Outside of those gates, you do not need to do anything.
+> **GitHub Issues are the heartbeat.** The human makes decisions. AI agents do work. GitHub automation enforces quality. Nothing moves without an issue.
 
 ---
 
-## Part 1 — Starting the Project (Do This Once)
+## Part 1 — The Five Participants and Their Tools
 
-### Step 1 — One-time GitHub setup (~30 min)
-
-| # | What | Where |
-|---|---|---|
-| 1 | ✅ **Labels created** | Done — you ran `bootstrap-labels.ps1` |
-| 2 | **Create milestones** | [github.com/chenning007/OneSell/milestones](https://github.com/chenning007/OneSell/milestones) → New milestone |
-| 3 | **Create Project Board** | [github.com/chenning007/OneSell/projects](https://github.com/chenning007/OneSell/projects) → New project → Board view |
-| 4 | **Create 4 Environments** | Settings → Environments → create each, add yourself as Required Reviewer |
-| 5 | **Enable branch protection** | Settings → Branches → Add rule for `main` |
-| 6 | **Enable email notifications** | github.com → Settings → Notifications → enable Email for Actions + @mentions |
-
-#### Milestones to create
-```
-M0 — Foundation
-M1 — Wizard + Extraction (US)
-M2 — Agent + Results
-M3 — Quality & NFRs
-M4 — China Market
-M5 — Monetization
-```
-
-#### Project Board columns to create (in this order)
-```
-Backlog → Ready → In Progress → In Review → Done
-```
-
-#### GitHub Environments to create (each with you as Required Reviewer)
-```
-prd-approval
-architecture-approval
-qa-signoff
-release-approval
-```
-
-#### Branch protection settings for `main`
-- ✅ Require a pull request before merging
-- ✅ Require status checks to pass (select all CI jobs once they appear)
-- ✅ Require review from Code Owners
-- ✅ Do not allow bypassing the above settings
-
----
-
-### Step 2 — Create the M0 Foundation Issues (~10 min)
-
-Open [.github/M0-foundation-issues.md](../.github/M0-foundation-issues.md).  
-Create each of the **8 issues** on GitHub using the issue templates:
-
-| Issue | Title | Labels | Assignee |
+| Participant | What They Own | How They Work | Tools / Triggers |
 |---|---|---|---|
-| M0-1 | [Architect] Define database schema | role:architect, epic:foundation, P0, type:design | Architect agent |
-| M0-2 | [Architect] Define market config structure | role:architect, epic:foundation, P0, type:design | Architect agent |
-| M0-3 | [Dev] Implement database schema and Drizzle ORM | role:dev, epic:foundation, P0, type:chore | Dev agent |
-| M0-4 | [Dev] Backend env config and health endpoint | role:dev, epic:foundation, P0, type:chore | Dev agent |
-| M0-5 | [Dev] Implement JWT auth middleware | role:dev, epic:foundation, P0, type:feature | Dev agent |
-| M0-6 | [Dev] Redis-backed rate limiting | role:dev, epic:foundation, P0, type:feature | Dev agent |
-| M0-7 | [Tester] Test plan for M0 Foundation | role:tester, epic:foundation, P0, type:test | Tester agent |
-| M0-8 | [PM] Create M1 sprint issues from PRD §5 | role:pm, epic:foundation, P0, type:chore | PM agent |
-
-Move M0-1, M0-2, M0-4, and M0-7 to **`Ready`** immediately.  
-M0-3, M0-5, M0-6 stay in **`Backlog`** until M0-1 and M0-2 are approved.  
-M0-8 stays in **`Backlog`** until M0-1 and M0-2 are approved.
+| **Human** (`@chenning007`) | Final decisions at 4 gates; priority changes; product direction | Reviews notifications → makes Approve/Reject decisions on GitHub | GitHub email, Slack, browser |
+| **PM Agent** (`@pm`) | Product backlog, acceptance criteria, sprint planning, PRD | Creates and grooms issues; authors PRD updates | `/pm-create-feature-issue`, `/pm-sprint-planning`, `issue-triage` skill |
+| **Architect Agent** (`@architect`) | System design, API contracts, security, ADRs | Writes ADRs; reviews PRs for P1–P9 compliance; unblocks Dev | `/architect-review`, `architecture-review` skill |
+| **Dev Agent** (`@dev`) | Implementation, tests, PRs | Writes code; writes tests; opens PRs linked to issues | `/dev-implement-feature`, `/dev-code-review`, `extraction-script` skill |
+| **Tester Agent** (`@tester`) | Quality, test plans, QA sign-off, bug reports | Writes test plans; executes tests; posts `✅ QA passed` | `/tester-write-test-plan`, `/tester-execute-tests` |
+| **GitHub Automation** | CI, Dependabot, human-gate workflows, CODEOWNERS | Runs on push/PR/label events; blocks merges until checks pass | `.github/workflows/ci.yml`, `human-gates.yml`, `notify-human.yml`, `dependabot.yml` |
 
 ---
 
-### Step 3 — Trigger the agents
+## Part 2 — The Continuous Collaboration Loop
 
-Tell each AI agent (in separate Copilot sessions) their role and that work is ready:
+This is how every feature moves from idea to shipped. The loop repeats for every milestone.
 
-> *"You are the Architect agent for OneSell Scout. Read `.github/copilot-instructions.md`, then `docs/ARCHITECTURE.md` and `docs/PROJECT-MANAGEMENT.md`. Find the highest-priority `role:architect` issue in `Ready` state on GitHub and begin work."*
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                                                                             │
+│   ① PM updates PRD                                                          │
+│      ↓                                                                      │
+│   ② GitHub fires Gate 1 → Human approves PRD                                │
+│      ↓                                                                      │
+│   ③ PM creates sprint issues → assigns roles → moves to Ready               │
+│      ↓                                                                      │
+│   ④ Architect picks up type:design issues → writes ADRs                     │
+│      ↓                                                                      │
+│   ⑤ GitHub fires Gate 2 → Human approves ADR                                │
+│      ↓                                                                      │
+│   ⑥ Architect unblocks Dev issues → Dev picks up type:feature issues         │
+│      ↓  (IN PARALLEL)                                                       │
+│   ⑥a Tester picks up type:test issues → writes test plan (before Dev done)  │
+│      ↓                                                                      │
+│   ⑦ Dev opens PR → CI runs automatically → PR marked ready_for_review       │
+│      ↓                                                                      │
+│   ⑧ GitHub fires Gate 3 → Human reviews + merges PR                         │
+│      ↓                                                                      │
+│   ⑨ Tester executes test plan → posts ✅ QA passed → issue moves to Done    │
+│      ↓                                                                      │
+│   ⑩ All milestone issues Done → Human triggers Gate 4 → Release shipped 🚢  │
+│      ↓                                                                      │
+│   ⑪ PM begins next milestone (loop back to ①)                               │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
 
-> *"You are the PM agent for OneSell Scout. Read `.github/copilot-instructions.md`, then `docs/PROJECT-MANAGEMENT.md` and `docs/PRD-Product-Selection-Module.md`. Find the highest-priority `role:pm` issue in `Ready` state and begin work."*
-
-Agents for Dev and Tester use the same pattern with their role name.
-
-**That's it — the agents take it from there.** You will receive notifications when they need you.
-
----
-
-## Part 2 — Your Four Gates (What You Will Be Notified For)
-
-These are the only moments in the project where work **stops and waits for you**. At every other moment, agents are working automatically.
-
----
-
-### Gate 1 — PRD Approval
-
-**When it happens**: The PM agent has updated `docs/PRD-Product-Selection-Module.md` with new requirements or a version bump.
-
-**You will receive**:
-- A GitHub Actions email with an **Approve / Reject** button (if you've set up the `prd-approval` Environment)
-- A Slack DM (if `SLACK_WEBHOOK_URL` is configured)
-
-**What to do**:
-1. Click the link in the email → opens the GitHub Actions run
-2. Read the PR or commit diff showing what changed in the PRD
-3. Click **Approve** if the changes are correct
-4. Click **Reject** (and post a comment explaining what needs to change) if not
-
-**Impact of your decision**:
-- ✅ Approved → PM agent creates sprint issues from the new PRD version. Dev and Tester agents get new work.
-- ❌ Rejected → Everything stops. PM agent reads your comment and revises the PRD.
-
-**Time expected**: 5–15 min read + 1-click decision.
+**Key rule**: Steps ④ through ⑨ run in parallel across multiple issues. An Architect can work on M2 ADRs while Dev implements M1 features. A Tester can write M1 test plans while Dev is still coding. This parallelism is intentional — do not wait sequentially.
 
 ---
 
-### Gate 2 — Architecture Decision Approval (ADR)
+## Part 3 — Step-by-Step: Who Does What and When
 
-**When it happens**: The Architect agent has authored a new Architecture Decision Record (e.g. database schema, API contract, security design) and committed it to `docs/architecture/ADR-NNN-*.md`.
+### Step ① — PM Updates the PRD
 
-**You will receive**: GitHub Actions email + optional Slack, with a link directly to the ADR file.
+| | |
+|---|---|
+| **Who** | PM Agent (`@pm`) |
+| **Trigger** | New milestone starting, or a product decision that changes requirements |
+| **Action** | Update `docs/PRD-Product-Selection-Module.md` — increment version, add/change requirements |
+| **Output** | Updated PRD committed to a branch, PR opened |
+| **What happens next** | GitHub `human-gates.yml` fires **Gate 1** → Human is notified |
 
-**What to do**:
-1. Click the link → read the ADR (Problem Statement, Options, Decision, Consequences)
-2. If the decision makes sense for the product: **Approve**
-3. If you want changes: **Reject** → post a comment with specific questions or concerns
-
-**Impact of your decision**:
-- ✅ Approved → Architect agent unblocks dependent Dev issues. Implementation begins.
-- ❌ Rejected → Architect agent revises the ADR based on your feedback.
-
-**Time expected**: 10–20 min read + 1-click decision.
-
-**Tip**: You don't need to understand every technical detail. Focus on: *Does this match the product's privacy principles? Does it seem unnecessarily complex? Does it align with what you want to build?* Trust the architecture for technical details you're not sure about — that's what the Architect is for.
-
----
-
-### Gate 3 — Pull Request Review
-
-**When it happens**: A Dev agent has completed a feature, all CI checks have passed, and the PR is marked `ready_for_review`.
-
-**You will receive**: A GitHub email notification + optional Slack, with a link to the PR.
-
-**What to do**:
-1. Click the PR link
-2. Read the PR description: **What**, **Why**, **How**, **Tests added**
-3. Click **Files changed** to review the diff — focus on:
-   - Does it match the acceptance criteria on the linked issue?
-   - Does anything look like it could be a security problem?
-   - Is it the feature you expected?
-4. Click **Approve** on the PR review and merge, or request changes with a comment
-
-**Impact of your decision**:
-- ✅ Merged → Tester agent runs test execution. Feature gets `✅ QA passed` when done.
-- ❌ Changes requested → Dev agent reads your comment and updates the PR.
-
-**Time expected**: 10–30 min depending on PR size.
-
-**Tip**: You don't need to review every line. The CI pipeline has already checked: lint, type safety, unit tests, integration tests, security scans, no secrets, no eval(). Your review covers correctness of intent, not correctness of syntax.
+**PM checklist before updating PRD**:
+- [ ] Read the current PRD version fully
+- [ ] Identify new requirements or changes from user feedback, market research, or road map
+- [ ] Write requirements as observable outcomes — not implementation details
+- [ ] Add `needs-human-signoff` label to the associated issue
 
 ---
 
-### Gate 4 — Release Approval
+### Step ② — Human Approves PRD (Gate 1)
 
-**When it happens**: All issues in a milestone are `Done`, all P0/P1 tests have `✅ QA passed`. The Tester agent (or you manually) triggers the release gate workflow.
+| | |
+|---|---|
+| **Who** | Human (`@chenning007`) |
+| **Trigger** | Email/Slack notification: "PRD Updated — Your Approval Required" |
+| **Action** | Read the PRD diff → Approve or Reject in GitHub Actions |
+| **Time needed** | 5–15 minutes |
+| **What happens next** | ✅ Approved → PM creates sprint issues (Step ③). ❌ Rejected → PM revises PRD. |
 
-**You will receive**: GitHub Actions email + optional Slack summarising what is in the release.
+**Human decision guide**:
+- Does every new requirement map to a real user need?
+- Are priorities correct for the current business context?
+- Is anything missing that you expected to see?
 
-**What to do**:
-1. Click the link → review the milestone on GitHub (all issues should be `Done`)
-2. If you're happy with what shipped: **Approve**
-3. If something doesn't feel right: **Reject** → post what needs to be fixed first
+---
 
-**Impact of your decision**:
-- ✅ Approved → PM agent cuts `release/vX.Y` branch, creates GitHub Release with release notes, closes the milestone, merges back to `main`. 🚢
-- ❌ Rejected → No release. Agents fix the outstanding issues first.
+### Step ③ — PM Creates Sprint Issues
 
-**Trigger the release gate manually** (when you're ready, after all milestone issues are Done):
+| | |
+|---|---|
+| **Who** | PM Agent (`@pm`) |
+| **Trigger** | PRD approved at Gate 1 |
+| **Action** | Use `/pm-sprint-planning` → create ALL issues for the target milestone |
+| **Output** | Issues created with: title, labels (`role:*`, `epic:*`, `P*`, `type:*`), milestone, assignee, full AC |
+| **What happens next** | Design issues move to `Ready` → Architect picks them up (Step ④) |
 
+**PM checklist for each issue**:
+- [ ] Exactly one `role:*`, one `epic:*`, one `P*`, one `type:*` label
+- [ ] Milestone assigned
+- [ ] Assignee set (match role label to agent)
+- [ ] Full acceptance criteria — observable, independently testable, unambiguous, PRD-traceable
+- [ ] Dependencies listed (`Blocked by: #XX` if applicable)
+- [ ] `type:design` issues moved to `Ready` first (they unblock everything else)
+- [ ] `type:test` issues created for every feature group
+
+**Dependency ordering**:
+```
+type:design (Architect) → type:feature (Dev) → type:test execution (Tester)
+```
+
+---
+
+### Step ④ — Architect Writes Design Decisions (ADRs)
+
+| | |
+|---|---|
+| **Who** | Architect Agent (`@architect`) |
+| **Trigger** | `type:design role:architect` issue in `Ready` state |
+| **Action** | Read the issue → design the solution → commit ADR to `docs/architecture/ADR-NNN-*.md` |
+| **Output** | ADR committed; summary comment posted on the issue |
+| **What happens next** | GitHub `human-gates.yml` fires **Gate 2** → Human is notified |
+
+**Architect checklist**:
+- [ ] Read `docs/ARCHITECTURE.md` to understand existing constraints
+- [ ] Copy `docs/architecture/ADR-template.md` → fill all sections
+- [ ] Verify P1–P9 compliance of the proposed design
+- [ ] Update `docs/architecture/README.md` with a new row
+- [ ] Link ADR from the GitHub Issue
+- [ ] Add `needs-human-signoff` label
+
+---
+
+### Step ⑤ — Human Approves ADR (Gate 2)
+
+| | |
+|---|---|
+| **Who** | Human (`@chenning007`) |
+| **Trigger** | Email/Slack: "Architecture Decision Ready — Your Review Required" |
+| **Action** | Read the ADR → Approve or Reject in GitHub Actions |
+| **Time needed** | 10–20 minutes |
+| **What happens next** | ✅ Approved → Architect unblocks Dev issues (Step ⑥). ❌ Rejected → Architect revises. |
+
+**Human decision guide** (you don't need to evaluate every technical detail):
+- Does it align with the product's privacy-first principles?
+- Does it seem unnecessarily complex for what we're building?
+- Are there any obvious risks or concerns?
+
+---
+
+### Step ⑥ — Architect Unblocks Dev; Dev Implements
+
+| | |
+|---|---|
+| **Who** | Architect Agent → Dev Agent (`@dev`) |
+| **Trigger** | Architect: ADR approved. Dev: `type:feature role:dev` issue in `Ready` state. |
+| **Action (Architect)** | Post "Design complete — unblocked" comment on dependent issues; move them to `Ready` |
+| **Action (Dev)** | Use `/dev-implement-feature` → create branch `feature/<#>-name` → write code + tests → open PR with `Closes #<issue-number>` |
+| **Output** | PR opened, linked to issue |
+| **What happens next** | CI runs automatically → if passing, mark PR `ready_for_review` → Gate 3 fires |
+
+**Dev checklist (Definition of Done)**:
+- [ ] All acceptance criteria implemented and manually verified
+- [ ] P1–P9 self-review passed (use `architecture-review` skill)
+- [ ] Unit tests for all new logic; 100% branch coverage for tool functions
+- [ ] Extraction scripts: DOM fixture tests (valid page + unrecognized page)
+- [ ] Integration tests for new API endpoints
+- [ ] `pnpm test:unit && pnpm test:integration && pnpm test:security` all pass
+- [ ] No secrets, no `eval()`, no `child_process`, no `any` without justification
+- [ ] PR includes: What / Why / How / Tests added + `Closes #<issue-number>`
+- [ ] Request Architect review if touching: API contracts, agent pipeline, extraction interface, IPC, DB schema
+
+### Step ⑥a — Tester Writes Test Plan (In Parallel)
+
+| | |
+|---|---|
+| **Who** | Tester Agent (`@tester`) |
+| **Trigger** | `type:test role:tester` issue in `Ready` state (PM creates these at Step ③) |
+| **Action** | Use `/tester-write-test-plan` → map every AC to test cases, every relevant P1–P9 principle to a verification test |
+| **Output** | Test plan posted as a comment on the `type:test` issue |
+| **What happens next** | Test plan is ready and waiting for Dev to finish (Step ⑦–⑧) |
+
+**Tester checklist for test plans**:
+- [ ] Every AC item has at least one test case (happy path + failure path)
+- [ ] P1–P9 principles tested where relevant (P1 credential scan, P5 empty data, P9 auth)
+- [ ] Edge cases and negative tests identified
+- [ ] Entry criteria defined (when to start executing)
+- [ ] Exit criteria defined (when to sign off)
+
+---
+
+### Step ⑦ — CI Runs Automatically
+
+| | |
+|---|---|
+| **Who** | GitHub Actions (`ci.yml`) |
+| **Trigger** | Every push to `feature/**`, `fix/**`, `spike/**`, `chore/**`, or PR to `main` |
+| **Checks** | Lint → Typecheck → Unit tests → Integration tests (Postgres+Redis) → Security checks (secrets scan, eval ban, CVE audit) → Build → PR validation (branch name + linked issue) |
+| **Output** | Green ✅ or red ❌ status checks on the PR |
+| **What happens next** | If all green → Dev marks PR `ready_for_review` → Gate 3. If red → Dev fixes and pushes again. |
+
+**No one needs to do anything manually here.** CI runs automatically. Dev monitors the results and fixes any failures.
+
+---
+
+### Step ⑧ — Human Reviews + Merges PR (Gate 3)
+
+| | |
+|---|---|
+| **Who** | Human (`@chenning007`) |
+| **Trigger** | Email/Slack: "PR Ready — Awaiting Human Review" |
+| **Action** | Review PR diff → Approve and merge, or request changes |
+| **Time needed** | 10–30 minutes depending on PR size |
+| **What happens next** | ✅ Merged → Tester executes tests (Step ⑨). ❌ Changes requested → Dev fixes. |
+
+**Human review focus** (CI already checked syntax, types, tests, and security):
+- Does the code do what the linked issue describes?
+- Does anything feel wrong or overly complex?
+- Is there anything the user would notice that seems off?
+
+---
+
+### Step ⑨ — Tester Executes Tests and Signs Off
+
+| | |
+|---|---|
+| **Who** | Tester Agent (`@tester`) |
+| **Trigger** | Feature PR merged to `main`; Dev posts completion comment on feature issue |
+| **Action** | Use `/tester-execute-tests` → run test plan → record results |
+| **Output** | Test execution report posted on the `type:test` issue |
+| **What happens next** | All AC pass + no P0/P1 bugs → post `✅ QA passed` on feature issue → move to `Done` |
+
+**Tester actions after execution**:
+- [ ] All AC items checked off on the feature issue
+- [ ] Any failures → create `type:bug` issues using the bug-report template
+- [ ] Post `✅ QA passed` only when: all AC pass AND no open P0/P1 bugs
+- [ ] Move the feature issue to `Done` on the project board
+
+**If bugs are found**:
+1. Create a `type:bug role:dev` issue with: steps to reproduce, expected vs actual, severity, which P1–P9 principle was violated
+2. Link it to the original feature issue
+3. Do NOT post `✅ QA passed` until the bug is fixed and re-tested
+4. Dev picks up the bug issue → fix → PR → Gate 3 → Tester re-verifies
+
+---
+
+### Step ⑩ — Human Approves Release (Gate 4)
+
+| | |
+|---|---|
+| **Who** | Human (`@chenning007`) |
+| **Trigger** | All issues in the milestone are `Done`; all P0/P1 tests have `✅ QA passed` |
+| **Action** | Manually trigger: GitHub → Actions → "Human Approval Gates" → Run workflow → gate: `release-approval` |
+| **Time needed** | 5–10 minutes |
+| **What happens next** | ✅ Approved → PM cuts `release/vX.Y` branch, creates GitHub Release, closes milestone. 🚢 |
+
+**Human pre-release checklist**:
+- [ ] Open the milestone on GitHub — are ALL issues `Done`?
+- [ ] Are there any open P0 or P1 bugs linked to this milestone?
+- [ ] Is the PRD version current and correct?
+- [ ] Are you happy with what shipped?
+
+**How to trigger Gate 4**:
 ```
 GitHub → Actions → "Human Approval Gates" → Run workflow
 → gate: release-approval
-→ context: "All M0 issues done, ready to ship v0.1"
-→ milestone: "M0 — Foundation"
+→ context: "All M1 issues done, ready to ship v0.2"
+→ milestone: "M1 — Wizard + Extraction (US)"
 → Run workflow
 ```
 
 ---
 
-## Part 3 — The `needs-human-signoff` Label (Ad Hoc Gate)
+### Step ⑪ — PM Starts Next Milestone
 
-In addition to the four automatic gates, **any AI agent can pause and ask for your input at any time** by adding the `needs-human-signoff` label to an issue or PR.
+| | |
+|---|---|
+| **Who** | PM Agent (`@pm`) |
+| **Trigger** | Current milestone released; or PM proactively created next-sprint issues earlier |
+| **Action** | Loop back to Step ① — update PRD if needed, create issues for next milestone |
+| **What happens next** | The loop repeats continuously |
 
-When this happens:
-- You get an email + Slack notification immediately
-- The issue/PR title and description tell you exactly what question needs answering
-
-**Your response** (always on GitHub — not by email reply):
-1. Open the link in the notification
-2. Read the AI agent's comment on the issue — it will say:
-   - What was completed
-   - What specific decision is needed
-   - What happens if you approve vs reject
-3. Post a comment with your answer
-4. Remove the `needs-human-signoff` label from the issue
-
-Examples of when agents use this:
-- Architect is unsure between two security options and needs your preference
-- PM needs to confirm a product decision before writing acceptance criteria
-- Dev encountered an ambiguous requirement and needs clarification before coding
-- Tester found a P0 bug in production and needs a hotfix go/no-go
+**Best practice**: PM should create next-milestone issues WHILE the current milestone is still in progress. This ensures agents are never idle waiting for work.
 
 ---
 
-## Part 4 — How Agents Coordinate With Each Other
+## Part 4 — The Ad Hoc Gate: `needs-human-signoff`
 
-You don't need to manage this — but it helps to understand the flow:
+Beyond the 4 automatic gates, **any AI agent can pause and ask the human at any time**.
 
-```
-You create M0 issues in "Ready"
-        ↓
-Architect picks up M0-1, M0-2 → writes ADRs → commits to docs/architecture/
-        ↓
-[Gate 2: You approve ADRs]
-        ↓
-Architect comments on M0-3, M0-5, M0-6: "Blocked by M0-1/M0-2" → now unblocked
-PM picks up M0-8 → creates M1 sprint issues
-        ↓
-Dev picks up M0-3, M0-4, M0-5, M0-6 → branches: feature/3-..., feature/5-...
-Tester picks up M0-7 → writes test plan before Dev finishes
-        ↓
-Dev opens PRs → CI runs automatically → PRs marked ready_for_review
-        ↓
-[Gate 3: You review and merge PRs]
-        ↓
-Tester executes test plan → posts ✅ QA passed on each issue
-        ↓
-Issues move to Done → milestone complete
-        ↓
-[Gate 4: You approve release]
-        ↓
-🚢 v0.1 shipped → M1 sprint begins automatically (PM already created those issues)
-```
+| | |
+|---|---|
+| **Trigger** | Agent adds `needs-human-signoff` label to any issue or PR |
+| **Notification** | Instant email + Slack via `notify-human.yml` |
+| **Human action** | Read the agent's comment → post your decision → remove the label |
+| **Agent action** | Wait until label is removed, then resume |
 
-Agents do not wait for you between steps — only at the 4 gates. An architect can be writing M1 ADRs while a dev is implementing M0 features. A tester can write test plans before Dev finishes code. This is intentional parallelism.
+**Examples of when agents use this**:
+- Architect is torn between two security options
+- PM is unsure whether a feature should be P1 or P2
+- Dev found an ambiguous requirement
+- Tester found a P0 bug and needs hotfix go/no-go
 
----
-
-## Part 5 — How to Give Feedback on Work In Progress
-
-You don't have to wait for a gate to give feedback. At any point you can:
-
-**Comment on any issue**: agents watch all issues they're assigned to and will incorporate your feedback.
-
-**Request changes on a PR**: even before the formal review gate, you can add review comments on a PR.
-
-**Reject an ADR with detailed notes**: just click Reject and write "Please reconsider option B because [reason]. The main concern is [concern]." The Architect will revise.
-
-**Reopen an issue**: if a `Done` issue was actually not correct, reopen it and add a comment. The PM agent will pick it up and create a fix issue.
-
-**Change priorities**: on any issue, change the `P0`→`P1` label or move it on the project board. Agents always pick the highest-priority `Ready` issue, so re-labelling immediately changes what gets worked on next.
-
----
-
-## Part 6 — Warning Signs and How to Handle Them
-
-| What you see | What it means | What to do |
-|---|---|---|
-| An issue has been `In Progress` for more than 2 days with no activity | Agent may be blocked silently | Open the issue, comment "Status update?" |
-| A PR has failing CI checks but agent marked it `ready_for_review` | Agent submitted too early | Request changes: "CI is failing — please fix the failing checks before requesting review" |
-| `needs-human-signoff` label added but no notification email received | Notifications not configured | Check `github.com > Settings > Notifications` — enable email for Actions and @mentions |
-| Agent opened a PR to `release/*` or `hotfix/*` branch | Agent violated the rule (only you create those branches) | Close the PR, comment "This branch must be created by the human PM only. Please reopen against `main` via a feature branch." |
-| An issue's acceptance criteria were changed after Dev started | Process violation | Post a comment: "AC cannot change after work begins. Open a new issue for the change instead." |
-| An issue closed without `✅ QA passed` comment | Tester gate was bypassed | Reopen the issue. Comment: "This issue must not be closed without Tester QA sign-off." |
-
----
-
-## Part 7 — Quick Reference Card
-
-### When you get a GitHub/Slack notification, look for this pattern:
-
-| Subject line contains | It's a... | You need to... |
-|---|---|---|
-| `PRD Updated — Your Approval Required` | Gate 1 | Read PRD diff → Approve or Reject in GitHub Actions |
-| `Architecture Decision Ready` | Gate 2 | Read ADR → Approve or Reject in GitHub Actions |
-| `PR Ready for Your Review` | Gate 3 | Review PR diff → Approve and merge, or request changes |
-| `Release Ready — Your Go/No-Go` | Gate 4 | Review milestone → Approve in GitHub Actions |
-| `Your Decision Required` | Ad hoc `needs-human-signoff` | Read issue comment → post your answer as a comment |
-
-### Your responses on GitHub (copy-paste ready):
-
+**Human response templates** (copy-paste):
 ```
 ✅ Approved — proceed
 ```
 ```
-❌ Rejected — [your reason]. Please [specific action you want].
+❌ Rejected — [your reason]. Please [specific action].
 ```
 ```
-❌ Rejected — please revisit option B from the ADR. My main concern is [concern]. Come back with a revised proposal.
+The answer to your question is: [answer]. Please proceed with [direction].
 ```
-```
-Changes requested — [specific thing that needs to change]. Please update and re-request review.
-```
-
-### To change what agents work on next:
-1. Open the GitHub Project Board
-2. Move an issue from `Backlog` → `Ready` (or `Ready` → `Backlog`)
-3. Change the priority label (`P0`, `P1`, `P2`, `P3`)
-4. Agents automatically pick the highest-priority `Ready` issue next time they start
 
 ---
 
-## Part 8 — What You Should Never Need to Do
+## Part 5 — How Each Participant Finds Their Work
 
-These are things the agents handle. If you find yourself doing them, something has gone wrong with the setup:
+### Human
+1. Watch your email/Slack for gate notifications
+2. Visit the [Project Board](https://github.com/chenning007/OneSell/projects) weekly to see overall progress
+3. Watch for `needs-human-signoff` labels
 
-- Writing code, running tests, or debugging errors directly
-- Creating feature branches or merging PRs without running CI
-- Manually updating `docs/ARCHITECTURE.md` without an ADR
-- Closing issues without a Tester `✅ QA passed` comment
-- Creating `release/*` branches from outside the release workflow
-- Making product decisions in Slack or email without creating a GitHub Issue
+### PM Agent (`@pm`)
+1. Filter issues: `role:pm` + `Ready` state
+2. Pick the highest priority (`P0 → P1 → P2 → P3`)
+3. Read PRD before every task
+4. After completing work: move issue to `In Review` or `Done`
 
-If you want to override any of this — that's fine, you're the owner — but document the decision as a comment on the relevant GitHub Issue so the agents have context.
+### Architect Agent (`@architect`)
+1. Filter issues: `role:architect` + `Ready` state
+2. Pick highest priority
+3. Read `docs/ARCHITECTURE.md` before every task
+4. After completing: post a summary comment, add `needs-human-signoff`, move to `In Review`
+
+### Dev Agent (`@dev`)
+1. Filter issues: `role:dev` + `Ready` state
+2. Pick highest priority
+3. Read the linked design issue / ADR before coding
+4. After completing: open PR → CI runs → mark `ready_for_review`
+
+### Tester Agent (`@tester`)
+1. Filter issues: `role:tester` + `Ready` state
+2. Pick highest priority
+3. Read the linked feature issue's AC and the relevant `docs/ARCHITECTURE.md` sections
+4. After completing: post results → `✅ QA passed` or file bugs
+
+### GitHub Automation
+- **CI** (`ci.yml`): runs on every push and PR — no manual action
+- **Human Gates** (`human-gates.yml`): fires on PRD changes, new ADRs, PR ready, manual release — pauses and notifies human
+- **Notify Human** (`notify-human.yml`): fires when `needs-human-signoff` label added — sends instant notification
+- **Dependabot** (`dependabot.yml`): opens weekly PRs for outdated dependencies — auto-labeled `type:chore`
+- **CODEOWNERS**: auto-assigns `@chenning007` as reviewer for security-critical paths
 
 ---
 
-*Questions? Open a `type:question role:pm` issue on GitHub. The PM agent will respond and escalate to you if it needs a decision.*
+## Part 6 — Keeping the Pipeline Flowing: Common Stalls and Fixes
+
+| Symptom | Root Cause | Who Fixes It | Action |
+|---|---|---|---|
+| No issues in `Ready` for a role | PM hasn't created or groomed issues | **PM** | Run `/pm-sprint-planning` for the current milestone |
+| Dev issue in `Ready` but blocked by unfinished design | Architect hasn't completed the ADR | **Architect** | Prioritise the blocking `type:design` issue |
+| PR has been `In Review` for 2+ days | Human hasn't reviewed at Gate 3 | **Human** | Check email for "PR Ready" notification; review and merge |
+| Test plan not written yet but Dev is almost done | Tester hasn't started test planning | **Tester** | Pick up the `type:test` issue immediately — plans should be written BEFORE Dev finishes |
+| Issue `In Progress` for 2+ days with no activity | Agent may be stuck or blocked | **Human** | Comment on the issue: "Status update?" |
+| Bug filed but no one is working on it | Bug not assigned or not in `Ready` | **PM** | Assign the `type:bug` issue, set priority, move to `Ready` |
+| `needs-human-signoff` label with no human response | Human missed the notification | **Human** | Check GitHub notifications; respond on the issue |
+| PRD approved but no sprint issues created | PM didn't follow through after Gate 1 | **PM** | Run `/pm-sprint-planning` immediately |
+| All issues Done but no release | Human hasn't triggered Gate 4 | **Human** | Go to Actions → Human Approval Gates → Run workflow |
+| Dependabot PR sitting unmerged | No one reviewed the dependency update | **Human/Dev** | Review the Dependabot PR; merge if CI passes |
+| CI failing on a PR | Code issue or flaky test | **Dev** | Read CI output → fix the failure → push again |
+| Agent opened PR to `release/*` branch | Violation — only Human creates release branches | **Human** | Close the PR; comment explaining the rule |
+| Issue closed without `✅ QA passed` | Tester gate bypassed | **Human** | Reopen the issue; comment: "QA sign-off required" |
+
+---
+
+## Part 7 — Starting the Project (One-Time Setup)
+
+### For the Human — GitHub Setup (~30 min)
+
+| # | What | Where |
+|---|---|---|
+| 1 | **Create labels** | Run `.github/scripts/bootstrap-labels.ps1 -Token "ghp_..." -DeleteDefaults` |
+| 2 | **Create milestones** | github.com/chenning007/OneSell/milestones → New milestone |
+| 3 | **Create Project Board** | github.com/chenning007/OneSell/projects → Board view with columns: `Backlog → Ready → In Progress → In Review → Done` |
+| 4 | **Create 4 Environments** | Settings → Environments → create `prd-approval`, `architecture-approval`, `qa-signoff`, `release-approval` with yourself as Required Reviewer |
+| 5 | **Enable branch protection** | Settings → Branches → Protect `main`: require PR, status checks, Code Owner review |
+| 6 | **Enable notifications** | github.com → Settings → Notifications → enable Email for Actions + @mentions |
+| 7 | **Optional: Slack** | Configure `SLACK_WEBHOOK_URL` secret for instant Slack notifications |
+
+### For the Human — Create M0 Foundation Issues (~10 min)
+
+Open `.github/M0-foundation-issues.md` and create the 8 issues with the correct labels and milestone. Move these to `Ready` immediately: M0-1, M0-2, M0-4, M0-7. The rest stay in `Backlog` until dependencies are met.
+
+### For the Human — Start the Agents
+
+In VS Code Copilot Chat, start each agent for the first time:
+
+| Command | What it does |
+|---|---|
+| `@architect` — "Find the highest-priority `role:architect Ready` issue and begin work." | Kicks off Architect |
+| `@pm` — "Find the highest-priority `role:pm Ready` issue and begin work." | Kicks off PM |
+| `@dev` — "Find the highest-priority `role:dev Ready` issue and begin work." | Kicks off Dev |
+| `@tester` — "Find the highest-priority `role:tester Ready` issue and begin work." | Kicks off Tester |
+
+After the initial trigger, agents pick up work automatically by filtering for `Ready` issues with their role label.
+
+---
+
+## Part 8 — Quick Reference Cards
+
+### For the Human — Gate Response Cheat Sheet
+
+| Notification Subject | Gate | Time | Action |
+|---|---|---|---|
+| "PRD Updated — Your Approval Required" | Gate 1 | 5–15 min | Read PRD diff → Approve or Reject in GitHub Actions |
+| "Architecture Decision Ready" | Gate 2 | 10–20 min | Read ADR → Approve or Reject in GitHub Actions |
+| "PR Ready for Your Review" | Gate 3 | 10–30 min | Review PR diff → Approve+merge or request changes |
+| "Release Ready — Your Go/No-Go" | Gate 4 | 5–10 min | Review milestone → Approve in GitHub Actions |
+| "Your Decision Required" | Ad hoc | 5 min | Read issue comment → post your decision → remove label |
+
+### For AI Agents — "What Do I Do Next?" Decision Tree
+
+```
+1. Filter GitHub Issues: role:<your-role> + Ready
+2. Pick highest priority (P0 > P1 > P2 > P3)
+3. Move issue to In Progress
+4. Read the issue fully — AC, dependencies, architecture references
+5. Do the work:
+   PM      → create/groom issues, update PRD
+   Architect → write ADR, review PR, unblock Dev
+   Dev     → implement feature, write tests, open PR
+   Tester  → write test plan or execute tests
+6. Post deliverable:
+   PM      → issues created → move to Done
+   Architect → ADR committed → add needs-human-signoff → In Review
+   Dev     → PR opened → CI passes → ready_for_review
+   Tester  → test results posted → ✅ QA passed or bugs filed
+7. Pick up next issue (go to step 1)
+```
+
+### For Everyone — Copilot Tools Reference
+
+| Role | Agent | Prompts | Skills |
+|---|---|---|---|
+| PM | `@pm` | `/pm-create-feature-issue`, `/pm-sprint-planning` | `issue-triage` |
+| Architect | `@architect` | `/architect-review` | `architecture-review` |
+| Dev | `@dev` | `/dev-implement-feature`, `/dev-code-review` | `architecture-review`, `extraction-script` |
+| Tester | `@tester` | `/tester-write-test-plan`, `/tester-execute-tests` | `extraction-script` |
+
+---
+
+## Part 9 — How to Give Feedback and Change Direction
+
+The human can intervene at any point without waiting for a gate:
+
+| Action | How to Do It | Impact |
+|---|---|---|
+| **Change priorities** | Update `P*` label on any issue | Agents pick highest-priority `Ready` issue next |
+| **Reorder work** | Move issues between `Backlog` ↔ `Ready` on the project board | Controls what agents can pick up |
+| **Give mid-work feedback** | Comment on any issue or PR | Agents read and incorporate your comments |
+| **Request changes on a PR** | Add review comments before Gate 3 | Dev sees and addresses them |
+| **Reject an ADR with notes** | At Gate 2: Reject + comment with specific concerns | Architect revises based on your feedback |
+| **Reopen a Done issue** | Reopen the issue + comment what's wrong | PM will create a follow-up fix issue |
+| **Create an urgent issue** | Create a `P0 type:bug` issue and assign it | Takes priority over all other work |
+| **Pause all work** | Move all `Ready` issues back to `Backlog` | No agent picks up new work until you move issues back |
+
+---
+
+## Part 10 — What Each Participant Should Never Do
+
+| Participant | Never Do This |
+|---|---|
+| **Human** | Write code directly; bypass CI; merge without passing checks; close issues without `✅ QA passed` |
+| **PM Agent** | Write code; run tests; make architectural decisions; create release branches |
+| **Architect Agent** | Write production features; execute tests; change acceptance criteria |
+| **Dev Agent** | Change AC; make product decisions; self-close issues without Tester sign-off; merge to `main` |
+| **Tester Agent** | Modify source code (only test files); change product requirements; self-approve features |
+| **Any AI Agent** | Merge PRs to `main`; create `release/*` or `hotfix/*` branches; publish git tags; close milestones; delete AC on `role:pm` issues |
+
+---
+
+## Part 11 — Milestone Roadmap
+
+| Milestone | Scope | Key Roles Active | Primary Gates |
+|---|---|---|---|
+| **M0 — Foundation** | Architecture, DB schema, auth, CI | Architect → Dev → Tester | Gate 2 (ADRs), Gate 3 (PRs), Gate 4 (release) |
+| **M1 — Wizard + Extraction (US)** | Preference wizard, US platform extraction | PM → Architect → Dev → Tester | All 4 gates |
+| **M2 — Agent + Results** | LLM agent pipeline, results UI | Architect → Dev → Tester | Gate 2, 3, 4 |
+| **M3 — Quality & NFRs** | Security hardening, performance, a11y | Dev → Tester | Gate 3, 4 |
+| **M4 — China Market** | China extractions, ZH-CN prompts, i18n | PM → Architect → Dev → Tester | All 4 gates |
+| **M5 — Monetization** | Subscription tiers, access control | PM → Architect → Dev → Tester | All 4 gates |
+
+---
+
+*Questions about this process? Open a `type:question role:pm` issue on GitHub. The PM agent will respond and escalate to you if it needs a decision.*

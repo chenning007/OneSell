@@ -14,6 +14,8 @@ declare global {
         hideView(platformId: string): Promise<void>;
         runExtraction(platformId: string): Promise<RawPlatformData | null>;
         getCurrentUrl(platformId: string): Promise<string>;
+        getOpenPlatforms(): Promise<string[]>;
+        hideAll(): Promise<void>;
       };
       payload: {
         build(

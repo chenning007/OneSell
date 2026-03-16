@@ -73,9 +73,19 @@ export class ExtractionManager {
   async extractFromView(platformId: string): Promise<RawPlatformData | null> {
     const view = this.views.get(platformId);
     const script = registry.get(platformId);
-    if (!view || !script) return null;
+
+    if (!view) {
+      console.error(`[ExtractionManager] extractFromView(${platformId}): no BrowserView found`);
+      return null;
+    }
+    if (!script) {
+      console.error(`[ExtractionManager] extractFromView(${platformId}): no script registered`);
+      console.log('[ExtractionManager] Registered scripts:', [...registry.getAll().map(s => s.platformId)]);
+      return null;
+    }
 
     const url = view.webContents.getURL();
+    console.log(`[ExtractionManager] extractFromView(${platformId}): page URL = ${url}`);
 
     // Serialize extractFromPage to run in the page context
     const extractFnSrc = script.extractFromPage.toString();
@@ -83,19 +93,43 @@ export class ExtractionManager {
       (() => {
         const extractFromPage = ${extractFnSrc};
         try {
-          return JSON.stringify(extractFromPage(document, ${JSON.stringify(url)}));
+          const result = extractFromPage(document, ${JSON.stringify(url)});
+          if (result === null || result === undefined) {
+            return JSON.stringify({ __debug_null: true, reason: 'extractFromPage returned null/undefined' });
+          }
+          return JSON.stringify({ __debug_null: false, payload: result });
         } catch (e) {
-          return null;
+          return JSON.stringify({ __debug_null: true, reason: 'extractFromPage threw: ' + (e && e.message ? e.message : String(e)), stack: e && e.stack ? e.stack : '' });
         }
       })()
     `;
 
-    const result: string | null = await view.webContents.executeJavaScript(js);
-    if (result === null || result === undefined) return null;
-
     try {
-      return JSON.parse(result) as RawPlatformData;
-    } catch {
+      const raw: string | null = await view.webContents.executeJavaScript(js);
+      console.log(`[ExtractionManager] executeJavaScript raw result (first 500 chars):`, raw?.slice(0, 500));
+
+      if (raw === null || raw === undefined) {
+        console.error(`[ExtractionManager] extractFromView(${platformId}): executeJavaScript returned null/undefined`);
+        return null;
+      }
+
+      const wrapper = JSON.parse(raw);
+
+      if (wrapper.__debug_null) {
+        console.error(`[ExtractionManager] extractFromView(${platformId}): extraction returned null — ${wrapper.reason}`);
+        if (wrapper.stack) console.error(`[ExtractionManager] stack:`, wrapper.stack);
+        return null;
+      }
+
+      const result = wrapper.payload as RawPlatformData;
+      const dataKeys = result.data ? Object.keys(result.data) : [];
+      const listingCount = Array.isArray((result.data as Record<string, unknown>)['listings'])
+        ? ((result.data as Record<string, unknown>)['listings'] as unknown[]).length
+        : 'N/A';
+      console.log(`[ExtractionManager] extractFromView(${platformId}): SUCCESS — dataKeys=[${dataKeys}], listings=${listingCount}`);
+      return result;
+    } catch (err) {
+      console.error(`[ExtractionManager] extractFromView(${platformId}): executeJavaScript FAILED:`, err);
       return null;
     }
   }
@@ -104,6 +138,23 @@ export class ExtractionManager {
   getCurrentUrl(platformId: string): string {
     const view = this.views.get(platformId);
     return view ? view.webContents.getURL() : '';
+  }
+
+  /** Check whether a BrowserView exists for the given platform. */
+  hasView(platformId: string): boolean {
+    return this.views.has(platformId);
+  }
+
+  /** Return the list of platformIds that currently have an open BrowserView. */
+  getOpenPlatforms(): string[] {
+    return Array.from(this.views.keys());
+  }
+
+  /** Hide all open BrowserViews (removes from window, keeps sessions alive). */
+  hideAll(): void {
+    for (const [, view] of this.views) {
+      this.mainWindow.removeBrowserView(view);
+    }
   }
 
   /** Destroy all BrowserViews — call on main window close. */

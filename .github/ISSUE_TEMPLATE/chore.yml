@@ -1,0 +1,83 @@
+name: "Chore / Tooling"
+description: "Build system, config, CI/CD, or dependency update."
+labels: ["type:chore"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template for non-feature work: build system changes, config updates, CI/CD tweaks, dependency upgrades, or tooling improvements.
+
+  - type: dropdown
+    id: epic
+    attributes:
+      label: Epic
+      options:
+        - epic:foundation
+        - epic:wizard
+        - epic:extraction
+        - epic:agent
+        - epic:results-ui
+        - epic:china
+        - epic:security-nfr
+        - epic:monetization
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options:
+        - "P0 — critical (blocks current milestone)"
+        - "P1 — high (must ship this quarter)"
+        - "P2 — medium (next milestone)"
+        - "P3 — low (nice to have)"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What needs to change?
+      description: "Describe the build, config, or tooling change."
+      placeholder: "e.g. Upgrade pnpm from 9.x to 10.x across all workspace packages."
+    validations:
+      required: true
+
+  - type: textarea
+    id: rationale
+    attributes:
+      label: Why is this needed?
+      description: "Explain the motivation — security, performance, DX, CI reliability, etc."
+      placeholder: "e.g. pnpm 10 improves lockfile resolution and fixes a known issue with peer dependencies."
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Acceptance Criteria
+      description: "What must be true when this chore is done?"
+      value: |
+        - [ ]
+        - [ ]
+        - [ ] CI passes after the change
+    validations:
+      required: true
+
+  - type: textarea
+    id: affected-files
+    attributes:
+      label: Affected files / areas
+      description: "Which files or directories will this change touch?"
+      placeholder: "e.g. package.json, pnpm-lock.yaml, .github/workflows/ci.yml"
+    validations:
+      required: false
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: "Any additional context, links, or migration guides."
+    validations:
+      required: false

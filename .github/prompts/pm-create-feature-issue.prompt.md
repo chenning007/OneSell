@@ -1,5 +1,5 @@
 ---
-mode: agent
+agent: pm
 description: "PM task: create a fully-formed GitHub Issue for a new feature from a PRD section reference."
 ---
 

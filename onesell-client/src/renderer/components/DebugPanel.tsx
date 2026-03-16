@@ -50,7 +50,7 @@ export default function DebugPanel(): React.ReactElement {
   }, []);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    bottomRef.current?.scrollIntoView?.({ behavior: 'smooth' });
   }, [logs]);
 
   const colors: Record<LogEntry['level'], string> = {

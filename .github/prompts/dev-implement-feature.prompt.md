@@ -1,5 +1,5 @@
 ---
-mode: agent
+agent: dev
 description: "Dev task: implement a feature from a GitHub Issue. Produces branch-ready code with tests."
 ---
 

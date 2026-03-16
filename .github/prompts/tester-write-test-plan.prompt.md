@@ -1,5 +1,5 @@
 ---
-mode: agent
+agent: tester
 description: "Tester task: write a complete test plan for a feature issue before implementation is finished."
 ---
 
@@ -75,7 +75,7 @@ Post as a comment on the `type:test` GitHub Issue:
 - Feature branch merged to main
 - Dev has posted completion comment on feature issue #XX
 
-### Exit Criteria  
+### Exit Criteria
 - All [N] AC items verified ✅
 - No open P0/P1 bugs linked to this feature
 - `✅ QA passed` posted on issue #XX

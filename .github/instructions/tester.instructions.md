@@ -1,5 +1,5 @@
 ---
-applyTo: "tests/**"
+applyTo: "tests/**,onesell-client/tests/**,onesell-backend/tests/**"
 ---
 
 # GitHub Copilot — Tester Role Context
@@ -55,8 +55,8 @@ The 9 principles in `docs/ARCHITECTURE.md §1` are **test requirements**, not ju
 ...
 
 ## Edge Cases & Negative Tests
-- [ ] 
-- [ ] 
+- [ ]
+- [ ]
 
 ## Entry Criteria
 [Feature merged to main; Dev completion comment posted]
@@ -98,6 +98,12 @@ When ALL acceptance criteria pass and no P0/P1 bugs are open:
 
 1. Check off each passing AC item on the feature issue
 2. Post `✅ QA passed` as a comment on the **feature issue**
+
+## Related Copilot Resources
+
+- **Agent**: Use `@tester` in VS Code Copilot Chat to activate the Tester agent with pre-configured tool access
+- **Prompt**: Use `/tester-write-test-plan` to generate a structured test plan for a feature issue
+- **Skill**: The `extraction-script` skill contains DOM fixture testing patterns for extraction scripts
 3. Move the feature issue to `Done`
 
 This comment is the ONLY gate for `Done`. Do not post it until all criteria pass.

@@ -1,0 +1,17 @@
+{
+  "recommendations": [
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "bradlc.vscode-tailwindcss",
+    "ms-playwright.playwright",
+    "vitest.explorer",
+    "github.copilot",
+    "github.copilot-chat",
+    "github.vscode-pull-request-github",
+    "eamodio.gitlens",
+    "prisma.prisma",
+    "mikestead.dotenv",
+    "streetsidesoftware.code-spell-checker",
+    "ms-vscode.vscode-typescript-next"
+  ]
+}

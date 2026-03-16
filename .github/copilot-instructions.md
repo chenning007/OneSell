@@ -135,12 +135,13 @@ An issue is **Done** only when ALL of the following are true:
 | `fix/<issue#>-name` | Dev — bug fixes |
 | `spike/<issue#>-name` | Architect — research/prototypes |
 | `docs/<issue#>-name` | Any role — documentation only |
+| `chore/<issue#>-name` | Dev — build, config, or tooling |
 
 Every PR must include `Closes #<issue-number>` in the description.
 
 ---
 
-## 10. When You Are Blocked
+## 8. When You Are Blocked
 
 Add the `blocked` label to your issue, post a comment explaining the blocker, and mention `@PM`. PM resolves blockers within 1 business day. Do not skip ahead to other work without logging the block first.
 
@@ -219,13 +220,7 @@ For a critical bug found after release:
 
 ---
 
-## 10. When You Are Blocked
-
-Add the `blocked` label to your issue, post a comment explaining the blocker, and mention `@PM`. PM resolves blockers within 1 business day. Do not skip ahead to other work without logging the block first.
-
----
-
-## 11. Human-in-the-Loop Gates (AI-Driven Project)
+## 10. Human-in-the-Loop Gates (AI-Driven Project)
 
 > This section applies when AI agents (GitHub Copilot, automated workflows) are executing the roles above. The **human owner** must be reachable and must make the following decisions — AI may not proceed past these gates without explicit human approval.
 
@@ -300,6 +295,43 @@ Add these secrets in `Settings > Secrets > Actions`:
 - Publish a GitHub Release or git tag
 - Close a milestone
 - Change or delete acceptance criteria on a `role:pm` issue
+
+---
+
+## 11. Copilot Agents, Skills & Prompts
+
+> This section describes the custom GitHub Copilot extensions available for each role. These are defined in `.github/agents/`, `.github/skills/`, and `.github/prompts/`.
+
+### Custom Agents (invoke with `@agent-name` in VS Code Copilot Chat)
+
+| Agent | Role | Purpose |
+|---|---|---|
+| `@pm` | Product Manager | Create feature issues from PRD sections, groom backlog, sprint planning |
+| `@architect` | Architect | Review PRs for P1–P9 compliance, create ADRs, define API contracts |
+| `@dev` | Developer | Implement features, write tests, submit PRs following code standards |
+| `@tester` | Tester | Write test plans, execute tests, report bugs, sign off on features |
+
+Each agent has pre-configured tool access appropriate to its role. Use the matching agent when performing role-specific work.
+
+### Custom Skills (auto-invoked when relevant)
+
+| Skill | Used By | Purpose |
+|---|---|---|
+| `architecture-review` | Architect, Dev | Structured P1–P9 compliance checklist and findings report |
+| `issue-triage` | PM | Validate issues have all required labels, AC quality, and dependencies |
+| `extraction-script` | Dev, Tester | Step-by-step guide for creating platform extraction scripts with test patterns |
+
+### Prompt Files (invoke with `/prompt-name` in VS Code Copilot Chat)
+
+| Prompt | Role | Purpose |
+|---|---|---|
+| `/pm-create-feature-issue` | PM | Generate a fully-formed GitHub Issue body from a PRD section |
+| `/pm-sprint-planning` | PM | Plan a full sprint — read PRD, create all issues for a milestone |
+| `/architect-review` | Architect | Structured compliance review with PASS/FAIL findings table |
+| `/dev-implement-feature` | Dev | Guided feature implementation with DoD reminders and PR template |
+| `/dev-code-review` | Dev | Structured PR code review with architectural compliance check |
+| `/tester-write-test-plan` | Tester | Generate a test plan mapping AC → test cases and principles → tests |
+| `/tester-execute-tests` | Tester | Execute a test plan and produce a structured results report |
 
 ---
 

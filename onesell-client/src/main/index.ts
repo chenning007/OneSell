@@ -14,6 +14,14 @@ import './extraction/scripts/tiktok-shop-us/index.js';
 
 const isDev = process.env['NODE_ENV'] === 'development';
 
+// Log unhandled errors in the main process
+process.on('uncaughtException', (err) => {
+  console.error('[main] Uncaught exception:', err);
+});
+process.on('unhandledRejection', (reason) => {
+  console.error('[main] Unhandled rejection:', reason);
+});
+
 // Point user data to a writable temp location to avoid GPU cache permission errors
 // on machines where the default AppData path is restricted.
 app.setPath('userData', path.join(os.tmpdir(), 'onesell-scout'));
@@ -35,13 +43,32 @@ function createWindow(): BrowserWindow {
     },
   });
 
+  // Forward renderer console output to the main-process terminal for debugging
+  win.webContents.on('console-message', (_event, level, message, line, sourceId) => {
+    const tag = ['[renderer:verbose]', '[renderer:info]', '[renderer:warn]', '[renderer:error]'][level] ?? '[renderer]';
+    console.log(`${tag} ${message}  (${sourceId}:${line})`);
+  });
+
+  // Log renderer crashes and navigation failures
+  win.webContents.on('render-process-gone', (_event, details) => {
+    console.error('[main] Renderer process gone:', details.reason, 'exitCode:', details.exitCode);
+  });
+  win.webContents.on('did-fail-load', (_event, errorCode, errorDescription, validatedURL) => {
+    console.error(`[main] Failed to load: ${validatedURL} — ${errorDescription} (code ${errorCode})`);
+  });
+  win.webContents.on('preload-error', (_event, preloadPath, error) => {
+    console.error(`[main] Preload error in ${preloadPath}:`, error);
+  });
+
   if (isDev) {
     // Development: load from Vite dev server (hot-reload)
     void win.loadURL('http://localhost:5173');
     win.webContents.openDevTools();
   } else {
     // Production: load built renderer
-    void win.loadFile(path.join(__dirname, '../renderer/index.html'));
+    // tsc outputs to dist/main/main/ (rootDir is src, so src/main/* → dist/main/main/*),
+    // while Vite outputs the renderer to dist/renderer/.
+    void win.loadFile(path.join(__dirname, '../../renderer/index.html'));
     // Open DevTools in production temporarily for debugging
     win.webContents.openDevTools();
   }

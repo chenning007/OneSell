@@ -60,6 +60,14 @@ export function registerIpcHandlers(
     return manager.getCurrentUrl(id);
   });
 
+  ipcMain.handle('extraction:get-open-platforms', () => {
+    return manager.getOpenPlatforms();
+  });
+
+  ipcMain.handle('extraction:hide-all', () => {
+    manager.hideAll();
+  });
+
   if (payloadBuilder) {
     ipcMain.handle('payload:build', (_event, args: unknown) => {
       const { sessionId, preferences, rawResults } = payloadBuildArgsSchema.parse(args);
@@ -80,6 +88,8 @@ export function removeIpcHandlers(): void {
     'extraction:hide-view',
     'extraction:run',
     'extraction:get-url',
+    'extraction:get-open-platforms',
+    'extraction:hide-all',
     'payload:build',
   ] as const;
   for (const channel of channels) {

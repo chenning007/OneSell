@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, "feature/**", "fix/**", "spike/**"]
+    branches: [main, "feature/**", "fix/**", "spike/**", "chore/**"]
   pull_request:
     branches: [main]
 
@@ -249,6 +249,6 @@ jobs:
         run: |
           if ! echo "$BRANCH" | grep -E "^(feature|fix|docs|spike|chore)/[0-9]+-[a-z0-9-]+$"; then
             echo "ERROR: Branch '$BRANCH' does not follow naming convention."
-            echo "Required: feature/<issue#>-name | fix/<issue#>-name | docs/<issue#>-name | spike/<issue#>-name"
+            echo "Required: feature/<issue#>-name | fix/<issue#>-name | docs/<issue#>-name | spike/<issue#>-name | chore/<issue#>-name"
             exit 1
           fi
