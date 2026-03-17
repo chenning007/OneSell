@@ -24,7 +24,7 @@ export interface CategoryConfig {
 
 export const MARKET_CONFIGS: Record<string, MarketConfig> = {
   us:  { marketId: 'us',  language: 'en-US', currency: 'USD', flag: '🇺🇸', i18nLang: 'en',    platforms: ['amazon-us','ebay-us','etsy','tiktok-shop-us','alibaba','google-trends'] },
-  cn:  { marketId: 'cn',  language: 'zh-CN', currency: 'CNY', flag: '🇨🇳', i18nLang: 'zh-CN', platforms: ['taobao','jd','pinduoduo','douyin-shop','1688','baidu-index'] },
+  cn:  { marketId: 'cn',  language: 'zh-CN', currency: 'CNY', flag: '🇨🇳', i18nLang: 'zh-CN', platforms: ['taobao','jd','pinduoduo','douyin-shop','kuaishou-shop','xiaohongshu','1688','baidu-index'] },
   uk:  { marketId: 'uk',  language: 'en-GB', currency: 'GBP', flag: '🇬🇧', i18nLang: 'en',    platforms: ['amazon-uk','ebay-uk','etsy','alibaba','google-trends'] },
   de:  { marketId: 'de',  language: 'de-DE', currency: 'EUR', flag: '🇩🇪', i18nLang: 'de',    platforms: ['amazon-de','ebay-de','otto','etsy','alibaba','google-trends'] },
   jp:  { marketId: 'jp',  language: 'ja-JP', currency: 'JPY', flag: '🇯🇵', i18nLang: 'ja',    platforms: ['amazon-jp','rakuten','mercari-jp','alibaba','google-trends'] },
