@@ -90,7 +90,7 @@ jobs:
 
       - name: Send email notification (if SMTP configured)
         if: ${{ env.SMTP_SERVER != '' }}
-        uses: dawidd6/action-send-mail@v3
+        uses: dawidd6/action-send-mail@v15
         with:
           server_address: ${{ secrets.SMTP_SERVER }}
           server_port: 465
@@ -157,7 +157,7 @@ jobs:
 
       - name: Send email notification (if SMTP configured)
         if: ${{ env.SMTP_SERVER != '' }}
-        uses: dawidd6/action-send-mail@v3
+        uses: dawidd6/action-send-mail@v15
         with:
           server_address: ${{ secrets.SMTP_SERVER }}
           server_port: 465
@@ -209,7 +209,7 @@ jobs:
 
       - name: Send email notification (if SMTP configured)
         if: ${{ env.SMTP_SERVER != '' }}
-        uses: dawidd6/action-send-mail@v3
+        uses: dawidd6/action-send-mail@v15
         with:
           server_address: ${{ secrets.SMTP_SERVER }}
           server_port: 465
@@ -263,7 +263,7 @@ jobs:
 
       - name: Send email notification (if SMTP configured)
         if: ${{ env.SMTP_SERVER != '' }}
-        uses: dawidd6/action-send-mail@v3
+        uses: dawidd6/action-send-mail@v15
         with:
           server_address: ${{ secrets.SMTP_SERVER }}
           server_port: 465
