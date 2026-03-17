@@ -2,243 +2,180 @@
 
 OneSell Scout helps first-time online sellers answer one question quickly: **what should I sell in my market?**
 
-You choose your target market, connect your e-commerce accounts in the desktop app, and the AI agent returns a ranked shortlist of product ideas with clear reasons, margin estimates, and risk warnings.
-
-## Current Release — M0 + M1 (Wizard + Extraction)
-
-This release includes the **Foundation** (M0) and **Wizard + Extraction** (M1) milestones. The guided preference wizard and US-market data extraction pipeline are fully implemented and tested.
-
-### What's Included
-
-#### Preference Wizard (6 steps)
-- **Step 1 — Market Selection**: Choose from 7 markets (US, China, UK, Germany, Japan, Australia, Southeast Asia) with flag icons and localized labels
-- **Step 2 — Budget**: Set your starting budget with a slider control (market-appropriate ranges and currency)
-- **Step 3 — Platforms**: Multi-select platforms available in your market (auto-filtered by market)
-- **Step 4 — Product Type**: Choose physical, digital, or mixed product focus (defaults to physical if skipped)
-- **Step 5 — Categories**: Select or exclude product categories with localized labels
-- **Step 6 — Fulfillment**: Set fulfillment time preference (defaults to moderate if skipped)
-- Full keyboard navigation (Tab, Enter, Space, Arrow keys)
-- ARIA-compliant progress bar, focus rings, and screen reader support
-
-#### Data Source Connection (Step 7)
-- Connect to marketplace platforms via embedded browser panels
-- Privacy indicator with lock icon — credentials never leave the client
-- Keyword input for focused extraction
-- Back-to-wizard navigation preserving all state
-- Per-platform connection lifecycle (Idle → Connected → Closed)
-
-#### Extraction Engine (Step 8)
-- Animated per-platform progress rows with real-time status
-- 6 US-market extraction scripts:
-  - **Amazon US** — bestseller rank, reviews, price, seller count
-  - **eBay US** — sell-through rate, price distribution
-  - **Etsy** — top listings, review velocity
-  - **TikTok Shop US** — hashtag GMV, trending products
-  - **Google Trends** — 12-month search index, related queries
-  - **Alibaba/AliExpress** — MOQ, unit price, shipping estimates
-- Graceful degradation: partial platform failures don't block analysis
-- Cancel support with completed results preserved
-- All-error state detection with back navigation
-- Shield icon + TLS security indicator
-- `aria-live` region for screen reader progress announcements
-
-#### Shared UI Components
-- **Toast** notifications — success/error/info variants, auto-dismiss (3s), bottom-right positioning
-- **ErrorBanner** — full-width dismissible error with optional retry action
-- **ConfirmDialog** — accessible modal with focus trapping, Escape to close
-- **FadeTransition** — CSS keyframe screen transitions (no JS timers)
-- **GlobalStyles** — `:focus-visible` 2px blue outline on all interactive elements
-- Responsive layout (grids collapse at < 800px, reduced padding)
-- WCAG AA contrast ratios on all text (≥ 4.5:1 body, ≥ 3:1 large/UI)
-
-#### Internationalization
-- 4 languages: English, Chinese (ZH-CN), Japanese, German
-- Market-driven language switching (automatic on market selection)
-- Localized category labels, budget ranges, and platform names
-
-#### Backend Foundation (partial M2)
-- PostgreSQL schema (users, analyses, saved lists, market configs)
-- Redis helpers with TTL management
-- Agent tool functions: `calc_margin`, `rank_competition`, `score_trend` (pure, deterministic)
-
-### What's NOT Included Yet
-- AI agent analysis pipeline (M2 — in progress)
-- Results dashboard and product detail screens (M2)
-- Auth, rate limiting, and API routes (M2)
-- China market extraction scripts (M4)
-- SEA and regional market scripts (M6)
-- Subscription tier enforcement (M5)
-
----
+You choose your target market, connect your e-commerce accounts in the desktop app, and an AI agent returns a ranked shortlist of product ideas with clear reasons, margin estimates, and risk warnings.
 
 ## Who This Is For
 
-- You are new to e-commerce and need product ideas backed by data
-- You want recommendations for your own market (US, China, SEA, UK, EU, Japan, Australia)
-- You prefer a guided flow instead of manual spreadsheet research
+- You are new to e-commerce and need product ideas backed by real data
+- You want recommendations tailored to your market (US, China, Southeast Asia, UK, Germany, Japan, or Australia)
+- You prefer a guided flow over hours of manual spreadsheet research
 
-## Prerequisites
+## What You Need
 
-- Windows 10+ or macOS 12+
-- Node.js 18+ and [pnpm](https://pnpm.io/)
-- Git
+- A Windows 10+ or macOS 12+ computer
+- An internet connection
+- An account on at least one supported marketplace (see [Supported Platforms](#supported-platforms) below)
 
-## Install and Run (Development)
+## Install OneSell Scout
+
+### Option 1 — Download the Installer (Recommended)
+
+1. Go to the [Releases page](https://github.com/chenning007/OneSell/releases)
+2. Download the installer for your operating system:
+   - **Windows**: `OneSell-Scout-Setup-x.y.z.exe`
+   - **macOS**: `OneSell-Scout-x.y.z.dmg`
+3. Run the installer and follow the prompts
+4. Launch **OneSell Scout** from your Start Menu (Windows) or Applications folder (macOS)
+
+### Option 2 — Build From Source
+
+Use this if a packaged installer is not yet available for your platform.
+
+1. Install [Node.js 18+](https://nodejs.org/) and [pnpm](https://pnpm.io/installation)
+2. Open a terminal and run:
 
 ```bash
-# 1. Clone the repository
 git clone https://github.com/chenning007/OneSell.git
 cd OneSell
-
-# 2. Switch to the M0+M1 release branch
-git checkout release/m0-m1-wizard-extraction
-
-# 3. Install all dependencies
 pnpm install
-
-# 4. Start the Electron desktop client in dev mode
 cd onesell-client
 pnpm electron:dev
 ```
 
-This opens a Vite dev server on `http://localhost:5173` and launches the Electron app.
+The app window opens automatically. You are ready to start.
 
-### Run Tests
+## How to Use OneSell Scout
 
-```bash
-# Client unit tests (293 tests across 24 files)
-cd onesell-client
-pnpm test:unit
+### Step 1 — Choose Your Market
 
-# Backend unit tests (57 tests across 5 files)
-cd onesell-backend
-npx vitest run
-```
+When the app opens you see market tiles with flags. Click the market that matches where you plan to sell.
 
-### Build for Production
+The app automatically switches to the right language and currency. For example, selecting **China** switches the interface to Chinese and shows prices in CNY.
 
-```bash
-cd onesell-client
-pnpm build              # TypeScript + Vite build
-pnpm electron:build     # Package Electron app (uses electron-builder)
-```
+**Supported markets**: United States, China, United Kingdom, Germany, Japan, Australia, Southeast Asia.
 
-## How to Test the Wizard Flow
+### Step 2 — Set Your Budget
 
-1. Launch the app (`pnpm electron:dev` from `onesell-client/`)
-2. **Step 1**: Click a market tile (e.g., "United States") — the app switches language and advances
-3. **Steps 2–6**: Use the wizard to set budget, select platforms, choose product type, categories, and fulfillment time. Try skipping steps to verify defaults.
-4. **Step 7 (Data Sources)**: Click "Connect" on any platform to open an embedded browser. After connecting, use the keyword input to set search focus. Click "Start Extraction".
-5. **Step 8 (Progress)**: Watch per-platform extraction progress. Test cancel behavior and partial-success scenarios.
-6. After extraction completes, the app is ready for analysis (backend agent pipeline — coming in M2).
+Use the slider to set how much you are willing to invest in your first product. The range adjusts automatically based on your market. If you are unsure, skip this step — a reasonable default is applied.
 
-### Keyboard Navigation Test
+### Step 3 — Pick Your Platforms
 
-- Tab through all wizard controls
-- Use Enter/Space to select market tiles and buttons
-- Use Arrow Left/Right on the budget slider
-- Verify blue focus ring appears on all interactive elements
+Select the marketplaces you already have accounts on (or plan to use). Only platforms relevant to your market appear. Select at least one.
 
-### Accessibility Test
+### Step 4 — Choose Product Type
 
-- Use a screen reader (NVDA, VoiceOver) to navigate the wizard
-- Verify progress bar announces step changes
-- Verify extraction progress is announced via aria-live region
-- Test ConfirmDialog focus trapping (Tab should not escape the modal)
+Pick **Physical**, **Digital**, or **Mixed**. If you skip this step, physical products are assumed.
 
-## Project Structure
+### Step 5 — Select Categories
 
-```
-OneSell/
-├── onesell-client/          # Electron + React desktop app
-│   ├── src/
-│   │   ├── main/            # Electron main process
-│   │   │   ├── extraction/  # Extraction engine + scripts
-│   │   │   └── ipc/         # IPC handlers
-│   │   ├── renderer/        # React UI
-│   │   │   ├── components/  # Shared UI (Toast, ErrorBanner, ConfirmDialog, etc.)
-│   │   │   ├── config/      # Markets config, responsive breakpoints
-│   │   │   ├── i18n/        # Internationalization (en, zh, ja, de)
-│   │   │   ├── modules/     # Feature modules (wizard, data-sources, progress)
-│   │   │   └── store/       # Zustand stores (wizard, extraction)
-│   │   └── shared/          # Shared types (ProductRecord, MarketContext, etc.)
-│   └── tests/               # Unit + contract + security tests
-├── onesell-backend/         # Fastify backend (partial)
-│   ├── src/
-│   │   ├── db/              # PostgreSQL schema + Drizzle ORM
-│   │   └── services/        # Agent tools, market config, Redis
-│   └── tests/               # Backend unit tests
-├── docs/                    # PRD, architecture, guides
-└── tests/                   # Cross-cutting test plans + E2E
-```
+Choose product categories you are interested in, or exclude ones you want to avoid. Labels are shown in your local language.
 
-## Supported Platforms (US Market — M1)
+### Step 6 — Fulfillment Preference
 
-| Platform | Data Extracted |
+Set how quickly you want to ship orders. If you skip this step, a moderate fulfillment speed is assumed.
+
+### Step 7 — Connect Your Data Sources
+
+Click **Connect** next to each platform you selected. A secure browser panel opens inside the app where you log in to your marketplace account.
+
+> **Your login credentials never leave your computer.** The lock icon confirms this. OneSell Scout only reads public product listing data from pages you visit — it does not store or transmit your passwords.
+
+After logging in, you can type **keywords** in the search box to focus the extraction on specific product categories (e.g., "kitchen organizer", "pet accessories").
+
+When ready, click **Start Extraction**.
+
+### Step 8 — Watch Extraction Progress
+
+Each connected platform shows a progress row as data is gathered. This usually takes 1 to 3 minutes.
+
+- If some platforms fail, the others still work — you can proceed with partial data
+- You can **Cancel** at any time; results already collected are kept
+- If all platforms fail, click **Back to Data Sources** to reconnect and try again
+
+### Coming Soon — AI Analysis and Results
+
+> The AI analysis engine is under active development. In a future update, after extraction completes, the app will automatically analyze the collected data and show you a ranked shortlist of product recommendations with scores, margin estimates, and risk flags.
+
+## Supported Platforms
+
+OneSell Scout currently supports data extraction from these US-market platforms:
+
+| Platform | What It Collects |
 |---|---|
 | Amazon US | Bestseller rank, review count, price, seller count |
 | eBay US | Sell-through rate, price distribution |
 | Etsy | Top listings, review velocity |
 | TikTok Shop US | Hashtag GMV, trending products |
-| Google Trends | 12-month search volume index, related queries |
-| Alibaba/AliExpress | MOQ, unit price, shipping estimates |
+| Google Trends | 12-month search volume trends, related queries |
+| Alibaba / AliExpress | MOQ, unit price, shipping estimates |
+
+Additional platforms for China, Southeast Asia, UK, Germany, Japan, and Australia are coming in future updates.
+
+## Features
+
+- **7 markets** with localized interfaces (English, Chinese, Japanese, German)
+- **6-step preference wizard** to personalize your product search
+- **6 extraction scripts** for US-market data gathering
+- **Keyboard accessible** — navigate the entire app with Tab, Enter, Space, and Arrow keys
+- **Screen reader support** — ARIA labels, live regions, and proper focus management
+- **Responsive layout** — works on screens down to 800px wide
+- **Privacy first** — your marketplace credentials stay on your machine
+- **Secure extraction** — all data transfer uses TLS 1.3 encryption
 
 ## Privacy and Security
 
-- OneSell Scout does not store your marketplace passwords
-- Session credentials remain in the local Electron client — never sent via IPC or API (P1 principle)
-- All extraction scripts run in sandboxed BrowserView instances
-- Data sent to backend is encrypted in transit (TLS 1.3)
-- Raw extraction payloads are session-scoped and purged after analysis
-- No `eval()`, no shell execution, no raw SQL — enforced by architectural principles P1–P9
+- OneSell Scout **never stores your marketplace passwords**
+- Login sessions stay inside the local app — credentials are never sent to any server
+- All extraction runs inside isolated browser panels on your machine
+- Data sent to the analysis backend is encrypted in transit (TLS 1.3)
+- Raw data is temporary and purged automatically after analysis
 
 ## Troubleshooting
 
-### A platform cannot connect
+### A platform will not connect
 
-- Verify your account can log in from a regular browser
-- Reopen the connector and sign in again
-- If there is MFA, complete MFA in the embedded browser panel
+- Make sure you can log in to that platform from a regular browser first
+- Close the connector panel and click Connect again
+- If the platform requires two-factor authentication (MFA), complete it in the embedded browser
 
-### Extraction returns too little data
+### Extraction returns very little data
 
-- Use broader keywords first
-- Connect at least two sources (marketplace + trend/supplier source)
-- Re-run during normal platform availability (not maintenance windows)
+- Try broader keywords (e.g., "electronics" instead of "USB-C hub 65W")
+- Connect at least two sources — a marketplace plus a trend or supplier source gives better coverage
+- Avoid running during known platform maintenance windows
 
-### App doesn't start
+### The app does not start
 
-- Ensure Node.js 18+ is installed: `node --version`
-- Ensure pnpm is installed: `pnpm --version`
-- Delete `node_modules` and reinstall: `pnpm install`
-- On Windows, if GPU errors appear, the app handles them automatically
+If you installed from source:
+- Check that Node.js 18+ is installed: run `node --version` in a terminal
+- Check that pnpm is installed: run `pnpm --version`
+- Try deleting `node_modules` and reinstalling: `pnpm install`
+- On Windows, GPU-related errors are handled automatically — the app should still open
+
+### Something else is wrong
+
+Open an issue at: https://github.com/chenning007/OneSell/issues
 
 ## Roadmap
 
-| Milestone | Status | Description |
-|---|---|---|
-| M0 Foundation | ✅ Complete | Architecture, PRD, personas, KPIs, test strategy |
-| M1 Wizard + Extraction | ✅ Complete | Preference wizard, 6 US extraction scripts, full a11y |
-| M2 Agent + Results | 🔧 In Progress | AI agent pipeline, results dashboard, auth, API routes |
-| M3 Quality + NFRs | Planned | TLS enforcement, data purge, performance, security audit |
-| M4 China Market | Planned | 8 China platform scripts, ZH-CN agent prompts |
-| M5 Monetization | Planned | Subscription tiers, access control |
-| M6 SEA + Regional | Planned | 11 additional regional extraction scripts |
-
-## Links
-
-- [Product Requirements (PRD)](docs/PRD-Product-Selection-Module.md)
-- [Architecture](docs/ARCHITECTURE.md)
-- [Project Management](docs/PROJECT-MANAGEMENT.md)
-- [Developer Guide](docs/guides/DEVELOPER-GUIDE.md)
-- [Tester Guide](docs/guides/TESTER-GUIDE.md)
-- [Issues](https://github.com/chenning007/OneSell/issues)
+| Feature | Status |
+|---|---|
+| Preference wizard (7 markets, 6 steps) | ✅ Available now |
+| US market data extraction (6 platforms) | ✅ Available now |
+| AI-powered product analysis | Coming soon |
+| Results dashboard with scores and rankings | Coming soon |
+| China market platforms (Taobao, JD, Pinduoduo, etc.) | Planned |
+| Southeast Asia platforms (Shopee, Lazada, etc.) | Planned |
+| UK, Germany, Japan, Australia platforms | Planned |
+| Subscription tiers | Planned |
 
 ## For Contributors
 
-If you are joining as a project contributor instead of an end user, start here:
+If you are a developer, tester, or contributor (not an end user), see:
 
-- [Team Collaboration Instructions](.github/copilot-instructions.md)
-- [Architecture](docs/ARCHITECTURE.md)
-- [Developer Guide](docs/guides/DEVELOPER-GUIDE.md)
-- [Tester Guide](docs/guides/TESTER-GUIDE.md)
+- [Developer Guide](docs/guides/DEVELOPER-GUIDE.md) — code standards, branch workflow, Definition of Done
+- [Tester Guide](docs/guides/TESTER-GUIDE.md) — test strategy, QA process
+- [Architecture](docs/ARCHITECTURE.md) — system design, principles P1–P9, interface contracts
+- [Product Requirements](docs/PRD-Product-Selection-Module.md) — full PRD with personas and acceptance criteria
+- [Project Management](docs/PROJECT-MANAGEMENT.md) — issue lifecycle, labels, release process
+- [Issues](https://github.com/chenning007/OneSell/issues) — backlog and task board
