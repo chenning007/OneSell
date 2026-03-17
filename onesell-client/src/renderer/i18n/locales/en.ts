@@ -163,6 +163,9 @@ const en = {
     priceInput: 'Sell price',
     feesInput: 'Platform fees (%)',
     calculatedMargin: 'Estimated margin',
+    tabReasoning: 'AI Reasoning',
+    reasoningTitle: 'How did the AI decide this?',
+    reasoningEmpty: 'No detailed reasoning steps available for this product.',
   },
 } as const;
 

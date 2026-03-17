@@ -159,6 +159,9 @@ const zhCn = {
     priceInput: '售价',
     feesInput: '平台费用(%)',
     calculatedMargin: '预估利润率',
+    tabReasoning: 'AI推理',
+    reasoningTitle: 'AI是如何做出这个决定的？',
+    reasoningEmpty: '该产品没有详细的推理步骤。',
   },
 } as const;
 

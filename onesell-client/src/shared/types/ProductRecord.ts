@@ -42,6 +42,18 @@ export interface ProductRecord {
 }
 
 /**
+ * ReasoningStep — one step in the agent's decision chain for a product.
+ * Shows what tool was used, what data values it operated on, and the insight derived.
+ */
+export interface ReasoningStep {
+  readonly stepNumber: number;
+  readonly action: string;          // e.g. "Analyzed market competition"
+  readonly toolUsed: string;        // e.g. "rank_competition"
+  readonly dataValues: Readonly<Record<string, string | number>>;
+  readonly insight: string;         // plain-English conclusion
+}
+
+/**
  * ProductCard — the UI-facing view of ProductRecord (adds display fields).
  * Returned by GET /analysis/:sessionId/results
  */
@@ -49,4 +61,5 @@ export interface ProductCard extends ProductRecord {
   readonly cardId: string;
   readonly rank: number;
   readonly marketInsight: string; // LLM-authored market context for this product
+  readonly reasoningSteps?: readonly ReasoningStep[];
 }

@@ -159,6 +159,9 @@ const de = {
     priceInput: 'Verkaufspreis',
     feesInput: 'Plattformgebühren (%)',
     calculatedMargin: 'Geschätzte Marge',
+    tabReasoning: 'KI-Begründung',
+    reasoningTitle: 'Wie hat die KI entschieden?',
+    reasoningEmpty: 'Keine detaillierten Begründungsschritte für dieses Produkt verfügbar.',
   },
 } as const;
 

@@ -3,8 +3,9 @@ import { useTranslation } from 'react-i18next';
 import { useAnalysisStore } from '../../store/analysisStore.js';
 import { useWizardStore } from '../../store/wizardStore.js';
 import type { ProductCard } from '../../../shared/types/index.js';
+import ReasoningLog from './ReasoningLog.js';
 
-type Tab = 'overview' | 'trends' | 'competition' | 'margin';
+type Tab = 'overview' | 'trends' | 'competition' | 'margin' | 'reasoning';
 
 function getRiskLevel(card: ProductCard): 'SAFE' | 'WARNING' | 'FLAGGED' {
   if (card.riskFlags.some((f) => f.severity === 'high')) return 'FLAGGED';
@@ -49,6 +50,7 @@ export default function ProductDetail(): React.ReactElement {
     { key: 'trends', labelKey: 'detail.tabTrends' },
     { key: 'competition', labelKey: 'detail.tabCompetition' },
     { key: 'margin', labelKey: 'detail.tabMargin' },
+    { key: 'reasoning', labelKey: 'detail.tabReasoning' },
   ];
 
   return (
@@ -88,6 +90,9 @@ export default function ProductDetail(): React.ReactElement {
         {activeTab === 'trends' && <TrendsPanel card={card} />}
         {activeTab === 'competition' && <CompetitionPanel card={card} />}
         {activeTab === 'margin' && <MarginCalculator card={card} />}
+        {activeTab === 'reasoning' && (
+          <ReasoningLog steps={card.reasoningSteps ?? []} justification={card.agentJustification} />
+        )}
       </div>
     </div>
   );

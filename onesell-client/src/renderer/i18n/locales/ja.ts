@@ -159,6 +159,9 @@ const ja = {
     priceInput: '販売価格',
     feesInput: 'プラットフォーム手数料(%)',
     calculatedMargin: '推定利益率',
+    tabReasoning: 'AI推論',
+    reasoningTitle: 'AIはどのように判断しましたか？',
+    reasoningEmpty: 'この製品の詳細な推論ステップはありません。',
   },
 } as const;
 
