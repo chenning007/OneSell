@@ -52,6 +52,21 @@ vi.mock('../../src/services/redis.js', () => ({
   getRedis: () => mockRedis,
 }));
 
+// ── Mock DB (tier enforcement inserts analysis_sessions) ────────────
+
+vi.mock('../../src/db/index.js', () => ({
+  db: {
+    insert: vi.fn().mockReturnValue({
+      values: vi.fn().mockResolvedValue([]),
+    }),
+    select: vi.fn().mockReturnValue({
+      from: vi.fn().mockReturnValue({
+        where: vi.fn().mockResolvedValue([{ count: 0 }]),
+      }),
+    }),
+  },
+}));
+
 // ── Mock AgentService ───────────────────────────────────────────────
 
 const mockAnalyze = vi.fn<(...args: unknown[]) => Promise<unknown>>();

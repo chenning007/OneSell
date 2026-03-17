@@ -11,8 +11,11 @@ import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { randomUUID } from 'node:crypto';
 import { authHook } from '../middleware/auth.js';
+import { analysisLimitHook, truncateResults, featureGateHook } from '../middleware/tier-enforcement.js';
 import { validateBody } from '../middleware/validation.js';
 import { getRedis } from '../../services/redis.js';
+import { db } from '../../db/index.js';
+import { analysisSessions } from '../../db/schema.js';
 import type { AgentService, AnalysisResult } from '../../services/agent/agent-service.js';
 import type { ExtractionDataSource, UserPreferences } from '../../services/agent/planner-agent.js';
 import type { MarketId } from '../../services/agent/tools/types.js';
@@ -67,7 +70,7 @@ export async function analysisRoutes(
 
   fastify.post(
     '/',
-    { preHandler: [authHook, validateBody(submitAnalysisSchema)] },
+    { preHandler: [authHook, validateBody(submitAnalysisSchema), analysisLimitHook] },
     async (request, reply) => {
       const userId = request.user!.userId;
       const { extractionData, preferences, marketId } = request.body as z.infer<typeof submitAnalysisSchema>;
@@ -77,6 +80,15 @@ export async function analysisRoutes(
       // Store ownership in Redis
       const redis = getRedis();
       await redis.set(ownerKey(analysisId), userId, 'EX', OWNER_TTL);
+
+      // Record analysis session in DB for weekly count tracking
+      await db.insert(analysisSessions).values({
+        id: analysisId,
+        userId,
+        market: marketId,
+        status: 'pending',
+        platformsUsed: extractionData.map((d) => d.platformId),
+      });
 
       // Fire-and-forget — analysis runs in the background
       const market = { marketId: marketId as MarketId, language: 'en', currency: 'USD', platforms: [] };
@@ -160,7 +172,35 @@ export async function analysisRoutes(
       }
 
       const results = JSON.parse(resultsRaw) as AnalysisResult;
-      return reply.send({ analysisId, status: results.status, results });
+      const tier = request.user!.tier;
+      const truncated = truncateResults(results, tier);
+      return reply.send({ analysisId, status: truncated.status, results: truncated });
+    },
+  );
+
+  // ── GET /analysis/:analysisId/drilldown ───────────────────────
+
+  fastify.get<{ Params: { analysisId: string } }>(
+    '/:analysisId/drilldown',
+    { preHandler: [authHook, featureGateHook('drillDown')] },
+    async (request, reply) => {
+      const userId = request.user!.userId;
+      const { analysisId } = request.params;
+
+      // User isolation check
+      const redis = getRedis();
+      const owner = await redis.get(ownerKey(analysisId));
+      if (!owner || owner !== userId) {
+        return reply.code(404).send({ error: 'Analysis not found' });
+      }
+
+      const resultsRaw = await redis.get(`session:${analysisId}:results`);
+      if (!resultsRaw) {
+        return reply.code(404).send({ error: 'Results not found' });
+      }
+
+      const results = JSON.parse(resultsRaw) as AnalysisResult;
+      return reply.send({ analysisId, drilldown: results });
     },
   );
 }
