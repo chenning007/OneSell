@@ -34,7 +34,7 @@ export default function WizardLayout({
       <div style={{ marginBottom: '8px', display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: '#666' }}>
         <span>{t('common.step', { current: currentStep - 1, total: TOTAL_STEPS })}</span>
       </div>
-      <div style={{ height: '6px', background: '#e0e0e0', borderRadius: '3px', marginBottom: '32px' }}>
+      <div role="progressbar" aria-valuenow={currentStep} aria-valuemin={1} aria-valuemax={6} aria-label="Wizard progress" style={{ height: '6px', background: '#e0e0e0', borderRadius: '3px', marginBottom: '32px' }}>
         <div style={{ height: '100%', width: `${progress}%`, background: '#0066cc', borderRadius: '3px', transition: 'width 0.3s ease' }} />
       </div>
 

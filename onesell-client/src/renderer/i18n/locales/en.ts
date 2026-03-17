@@ -100,6 +100,10 @@ const en = {
     cancel: 'Cancel',
     analyzeNow: 'Analyze Now',
     productsFound: '{{count}} products found',
+    secureConnection: 'Secure TLS 1.3 connection',
+    allFailed: 'All extractions failed. Please go back and try again.',
+    backToDataSources: '← Back to Data Sources',
+    ariaLabel: 'Extraction progress',
   },
 } as const;
 

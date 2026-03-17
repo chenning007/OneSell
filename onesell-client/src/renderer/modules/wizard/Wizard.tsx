@@ -8,7 +8,7 @@ import CategoriesStep from './CategoriesStep.js';
 import FulfillmentStep from './FulfillmentStep.js';
 
 export default function Wizard(): React.ReactElement {
-  const { currentStep, selectedPlatforms, setStep } = useWizardStore();
+  const { currentStep, selectedPlatforms, setStep, updatePreferences } = useWizardStore();
 
   function handleNext(): void {
     setStep(currentStep + 1);
@@ -19,6 +19,12 @@ export default function Wizard(): React.ReactElement {
   }
 
   function handleSkip(): void {
+    if (currentStep === 4) {
+      updatePreferences({ sellerExperience: 'some' });
+    }
+    if (currentStep === 6) {
+      updatePreferences({ riskTolerance: 'medium' });
+    }
     setStep(currentStep + 1);
   }
 

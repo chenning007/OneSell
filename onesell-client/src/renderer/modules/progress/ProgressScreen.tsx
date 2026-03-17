@@ -77,6 +77,11 @@ export default function ProgressScreen(): React.ReactElement {
   // Start the extraction runner
   useExtractionRunner(selectedPlatforms);
 
+  // BUG-B fix: require at least one successful platform for Analyze Now
+  const hasAnySuccess = platforms.some((p) => p.status === 'done');
+  const allErrored = allDone && !hasAnySuccess && platforms.length > 0;
+  const analyzeEnabled = allDone && !cancelled && hasAnySuccess;
+
   function handleCancel(): void {
     cancel();
   }
@@ -85,20 +90,34 @@ export default function ProgressScreen(): React.ReactElement {
     setStep(9);
   }
 
+  function handleBack(): void {
+    setStep(7);
+  }
+
   return (
     <>
       <style>{spinnerKeyframes}</style>
-      <div style={{
-        fontFamily: 'system-ui, sans-serif',
-        maxWidth: 600,
-        margin: '0 auto',
-        padding: '40px 24px',
-      }}>
-        <h2 style={{ marginBottom: 32, fontSize: 22, fontWeight: 600 }}>
+      <div
+        style={{
+          fontFamily: 'system-ui, sans-serif',
+          maxWidth: 600,
+          margin: '0 auto',
+          padding: '40px 24px',
+        }}
+        aria-label={t('progress.ariaLabel')}
+      >
+        <h2 style={{ marginBottom: 8, fontSize: 22, fontWeight: 600 }}>
           {t('progress.heading')}
         </h2>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 40 }}>
+        {/* BUG-A fix: security indicator */}
+        <div style={{ color: '#888', fontSize: 12, marginBottom: 32, display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span aria-hidden="true">🛡️</span>
+          <span>{t('progress.secureConnection')}</span>
+        </div>
+
+        {/* BUG-E fix: aria-live region wraps status section */}
+        <div aria-live="polite" style={{ display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 40 }}>
           {platforms.map((p) => (
             <div key={p.platformId} style={{
               display: 'flex',
@@ -119,9 +138,16 @@ export default function ProgressScreen(): React.ReactElement {
               />
             </div>
           ))}
+
+          {/* BUG-C fix: summary error when all platforms fail */}
+          {allErrored && (
+            <div style={{ color: '#e74c3c', fontSize: 14, padding: '12px 16px', textAlign: 'center' }}>
+              {t('progress.allFailed')}
+            </div>
+          )}
         </div>
 
-        <div style={{ display: 'flex', gap: 12 }}>
+        <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
           {!allDone && !cancelled && (
             <button
               onClick={handleCancel}
@@ -139,20 +165,36 @@ export default function ProgressScreen(): React.ReactElement {
           )}
           <button
             onClick={handleAnalyzeNow}
-            disabled={!allDone || cancelled}
+            disabled={!analyzeEnabled}
             style={{
               padding: '10px 24px',
               borderRadius: 6,
               border: 'none',
-              backgroundColor: allDone && !cancelled ? '#4a90e2' : '#ccc',
+              backgroundColor: analyzeEnabled ? '#4a90e2' : '#ccc',
               color: '#fff',
-              cursor: allDone && !cancelled ? 'pointer' : 'not-allowed',
+              cursor: analyzeEnabled ? 'pointer' : 'not-allowed',
               fontSize: 14,
               fontWeight: 600,
             }}
           >
             {t('progress.analyzeNow')}
           </button>
+
+          {/* BUG-D fix: Back link when all platforms fail */}
+          {allErrored && (
+            <a
+              href="#"
+              onClick={(e) => { e.preventDefault(); handleBack(); }}
+              style={{
+                color: '#4a90e2',
+                fontSize: 14,
+                textDecoration: 'none',
+                marginLeft: 8,
+              }}
+            >
+              {t('progress.backToDataSources')}
+            </a>
+          )}
         </div>
       </div>
     </>

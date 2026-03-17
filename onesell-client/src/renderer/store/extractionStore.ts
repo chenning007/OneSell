@@ -13,8 +13,10 @@ interface ExtractionState {
   platforms: PlatformProgress[];
   cancelled: boolean;
   allDone: boolean;
+  keywords: string;
   initPlatforms(platformIds: string[]): void;
   setStatus(platformId: string, status: PlatformStatus, productCount?: number, errorMessage?: string): void;
+  setKeywords(keywords: string): void;
   cancel(): void;
   reset(): void;
 }
@@ -27,6 +29,7 @@ export const useExtractionStore = create<ExtractionState>((set) => ({
   platforms: [],
   cancelled: false,
   allDone: false,
+  keywords: '',
 
   initPlatforms: (platformIds) => {
     const platforms: PlatformProgress[] = platformIds.map((platformId) => ({
@@ -48,7 +51,9 @@ export const useExtractionStore = create<ExtractionState>((set) => ({
     });
   },
 
+  setKeywords: (keywords) => set({ keywords }),
+
   cancel: () => set({ cancelled: true }),
 
-  reset: () => set({ platforms: [], cancelled: false, allDone: false }),
+  reset: () => set({ platforms: [], cancelled: false, allDone: false, keywords: '' }),
 }));

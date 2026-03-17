@@ -5,6 +5,8 @@ import Wizard from './modules/wizard/Wizard.js';
 import DataSourceConnect from './modules/data-sources/DataSourceConnect.js';
 import ProgressScreen from './modules/progress/ProgressScreen.js';
 import DebugPanel from './components/DebugPanel.js';
+import GlobalStyles from './components/GlobalStyles.js';
+import FadeTransition from './components/FadeTransition.js';
 
 export default function App(): React.ReactElement {
   const { currentStep } = useWizardStore();
@@ -30,8 +32,11 @@ export default function App(): React.ReactElement {
 
   return (
     <>
+      <GlobalStyles />
       {/* Add bottom padding so content isn't hidden behind debug panel */}
-      <div style={{ paddingBottom: '220px' }}>{content}</div>
+      <div style={{ paddingBottom: '220px' }}>
+        <FadeTransition key={currentStep}>{content}</FadeTransition>
+      </div>
       <DebugPanel />
     </>
   );

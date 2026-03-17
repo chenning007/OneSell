@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from '../../i18n/index.js';
 import { useWizardStore } from '../../store/wizardStore.js';
+import { useExtractionStore } from '../../store/extractionStore.js';
 
 type ConnectionStatus = 'idle' | 'connected' | 'extracting';
 
@@ -20,6 +21,8 @@ export default function DataSourceConnect(): React.ReactElement {
   const market = useWizardStore((s) => s.market);
   const setStep = useWizardStore((s) => s.setStep);
   const platforms: readonly string[] = market?.platforms ?? [];
+  const keywords = useExtractionStore((s) => s.keywords);
+  const setKeywords = useExtractionStore((s) => s.setKeywords);
 
   const [platformStates, setPlatformStates] = useState<Record<string, PlatformState>>(() =>
     Object.fromEntries(platforms.map((id) => [id, { status: 'idle' as ConnectionStatus }])),
@@ -96,12 +99,48 @@ export default function DataSourceConnect(): React.ReactElement {
     [setStatus, stopPolling],
   );
 
+  const handleBack = useCallback(async () => {
+    // Close all open platform views before navigating back
+    const openPlatforms = Object.entries(platformStates)
+      .filter(([, s]) => s.status !== 'idle')
+      .map(([id]) => id);
+    for (const id of openPlatforms) {
+      stopPolling(id);
+      try {
+        await window.electronAPI.extraction.closeView(id);
+      } catch { /* best-effort */ }
+    }
+    setStep(6);
+  }, [platformStates, stopPolling, setStep]);
+
   const connectedCount = Object.values(platformStates).filter((s) => s.status === 'connected').length;
 
   return (
     <div style={{ fontFamily: 'system-ui, sans-serif', padding: '24px' }}>
+      {/* BUG-C fix: Back to Wizard button */}
+      <button
+        onClick={() => void handleBack()}
+        aria-label="Back to wizard"
+        style={{
+          marginBottom: '16px',
+          padding: '6px 16px',
+          borderRadius: '4px',
+          border: '1px solid #6c757d',
+          background: '#fff',
+          color: '#6c757d',
+          cursor: 'pointer',
+          fontSize: '14px',
+        }}
+      >
+        ← {t('dataSources.backToWizard', { defaultValue: 'Back to Wizard' })}
+      </button>
+
       <h2>{t('dataSources.title')}</h2>
-      <p style={{ color: '#666' }}>{t('dataSources.description')}</p>
+      {/* BUG-A fix: Lock icon before privacy text */}
+      <p style={{ color: '#666' }}>
+        <span aria-label="lock" role="img">🔒</span>{' '}
+        {t('dataSources.description')}
+      </p>
       <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
         {platforms.map((platformId) => {
           const state = platformStates[platformId] ?? { status: 'idle' };
@@ -137,6 +176,7 @@ export default function DataSourceConnect(): React.ReactElement {
               {state.status === 'idle' ? (
                 <button
                   onClick={() => void handleConnect(platformId)}
+                  aria-label={`Connect to ${t(`platforms.${platformId}`, { defaultValue: platformId })}`}
                   style={{
                     padding: '6px 16px',
                     borderRadius: '4px',
@@ -151,6 +191,7 @@ export default function DataSourceConnect(): React.ReactElement {
               ) : (
                 <button
                   onClick={() => void handleClose(platformId)}
+                  aria-label={`Disconnect ${t(`platforms.${platformId}`, { defaultValue: platformId })}`}
                   style={{
                     padding: '6px 16px',
                     borderRadius: '4px',
@@ -168,11 +209,38 @@ export default function DataSourceConnect(): React.ReactElement {
         })}
       </ul>
 
+      {/* BUG-B fix: Keyword input for extraction runner */}
+      <div style={{ marginTop: '24px' }}>
+        <label
+          htmlFor="keyword-input"
+          style={{ display: 'block', marginBottom: '4px', fontSize: '14px', color: '#555' }}
+        >
+          {t('dataSources.keywordsLabel', { defaultValue: 'Search keywords (optional)' })}
+        </label>
+        <input
+          id="keyword-input"
+          type="text"
+          value={keywords}
+          onChange={(e) => setKeywords(e.target.value)}
+          aria-label="Search keywords"
+          placeholder={t('dataSources.keywordsPlaceholder', { defaultValue: 'e.g. wireless earbuds' })}
+          style={{
+            width: '100%',
+            maxWidth: '400px',
+            padding: '8px 12px',
+            borderRadius: '4px',
+            border: '1px solid #ccc',
+            fontSize: '14px',
+          }}
+        />
+      </div>
+
       {/* Start Extraction button — enabled once at least one platform is connected */}
       <div style={{ marginTop: '32px', display: 'flex', justifyContent: 'flex-end' }}>
         <button
           onClick={() => { setStep(8); }}
           disabled={connectedCount === 0}
+          aria-label="Start extraction"
           style={{
             padding: '12px 32px',
             borderRadius: '8px',
