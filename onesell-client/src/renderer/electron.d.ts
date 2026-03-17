@@ -24,6 +24,21 @@ declare global {
           rawResults: Record<string, RawPlatformData[]>
         ): Promise<AnalysisPayload>;
       };
+      analysis: {
+        submit(data: {
+          extractionData: { platformId: string; available: boolean; data?: unknown }[];
+          preferences: {
+            budget?: number;
+            preferredPlatforms?: string[];
+            categories?: string[];
+            riskTolerance?: 'low' | 'medium' | 'high';
+            fulfillmentPreference?: string;
+          };
+          marketId: string;
+        }): Promise<{ analysisId: string; status: string }>;
+        getStatus(analysisId: string): Promise<{ analysisId: string; status: string; message?: string }>;
+        getResults(analysisId: string): Promise<{ analysisId: string; results: unknown }>;
+      };
     };
   }
 }

@@ -4,6 +4,9 @@ import MarketSelection from './modules/wizard/MarketSelection.js';
 import Wizard from './modules/wizard/Wizard.js';
 import DataSourceConnect from './modules/data-sources/DataSourceConnect.js';
 import ProgressScreen from './modules/progress/ProgressScreen.js';
+import AgentAnalysisScreen from './modules/analysis/AgentAnalysisScreen.js';
+import ResultsDashboard from './modules/results/ResultsDashboard.js';
+import ProductDetail from './modules/results/ProductDetail.js';
 import DebugPanel from './components/DebugPanel.js';
 import GlobalStyles from './components/GlobalStyles.js';
 import FadeTransition from './components/FadeTransition.js';
@@ -21,6 +24,12 @@ export default function App(): React.ReactElement {
     content = <DataSourceConnect />;
   } else if (currentStep === 8) {
     content = <ProgressScreen />;
+  } else if (currentStep === 9) {
+    content = <AgentAnalysisScreen />;
+  } else if (currentStep === 10) {
+    content = <ResultsDashboard />;
+  } else if (currentStep === 11) {
+    content = <ProductDetail />;
   } else {
     content = (
       <div style={{ fontFamily: 'system-ui, sans-serif', textAlign: 'center', paddingTop: '20vh' }}>

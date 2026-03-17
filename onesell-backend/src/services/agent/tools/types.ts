@@ -11,9 +11,16 @@ export interface Tool<TInput, TOutput> {
   execute(input: TInput): TOutput;
 }
 
-// ── MarketId (mirrors onesell-client/src/shared/types/MarketContext.ts) ─────
+// ── MarketId & MarketContext (mirrors onesell-client/src/shared/types/MarketContext.ts) ─
 
 export type MarketId = 'us' | 'cn' | 'uk' | 'de' | 'jp' | 'sea' | 'au';
+
+export interface MarketContext {
+  readonly marketId: MarketId;
+  readonly language: string;     // BCP-47 language tag
+  readonly currency: string;     // ISO 4217 currency code
+  readonly platforms: readonly string[];
+}
 
 // ── calc_margin ─────────────────────────────────────────────────────
 
@@ -71,4 +78,76 @@ export interface TrendResult {
   readonly growthPercent: number;
   readonly seasonality: boolean;
   readonly score: number;                // 0–100
+}
+
+// ── flag_beginner_risk ──────────────────────────────────────────────
+
+export type RiskLevel = 'SAFE' | 'FLAGGED' | 'WARNING';
+
+export interface FlagBeginnerRiskInput {
+  readonly category: string;
+  readonly weight?: number;              // kg
+  readonly regulatoryKeywords?: readonly string[];
+  readonly market: MarketContext;
+}
+
+export interface BeginnerRiskResult {
+  readonly riskLevel: RiskLevel;
+  readonly reasons: readonly string[];
+}
+
+// ── compare_products ────────────────────────────────────────────────
+
+export interface ProductComparison {
+  readonly name: string;
+  readonly marginPercent: number;
+  readonly competitionScore: number;
+  readonly trendScore: number;
+  readonly riskLevel: string;
+}
+
+export interface CompareProductsInput {
+  readonly products: readonly ProductComparison[];
+}
+
+export interface RankedProduct {
+  readonly name: string;
+  readonly compositeScore: number;
+  readonly rank: number;
+}
+
+export interface CompareProductsResult {
+  readonly ranked: readonly RankedProduct[];
+}
+
+// ── estimate_cogs ───────────────────────────────────────────────────
+
+export interface EstimateCOGSInput {
+  readonly unitCostUSD: number;
+  readonly shippingCostUSD?: number;
+  readonly quantity?: number;
+  readonly targetCurrency: string;
+  readonly exchangeRates: Readonly<Record<string, number>>;
+}
+
+export interface COGSResult {
+  readonly totalCOGS: number;
+  readonly perUnitCOGS: number;
+  readonly currency: string;
+}
+
+// ── get_platform_fees ───────────────────────────────────────────────
+
+export interface GetPlatformFeesInput {
+  readonly platformId: string;
+  readonly market: MarketContext;
+}
+
+export interface PlatformFeesResult {
+  readonly platformId: string;
+  readonly commissionPercent: number;
+  readonly listingFee: number;
+  readonly paymentProcessingPercent: number;
+  readonly currency: string;
+  readonly notes: string;
 }

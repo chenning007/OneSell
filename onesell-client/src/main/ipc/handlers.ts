@@ -2,6 +2,7 @@ import { ipcMain, BrowserWindow } from 'electron';
 import { z } from 'zod';
 import type { ExtractionManager } from '../extraction/ExtractionManager.js';
 import type { PayloadBuilder } from '../extraction/PayloadBuilder.js';
+import type { BackendClient } from '../backend-client.js';
 import { registry } from '../extraction/ExtractionScriptRegistry.js';
 
 // P9: validate all IPC inputs at the boundary
@@ -22,10 +23,30 @@ const payloadBuildArgsSchema = z.object({
   rawResults: z.record(z.array(z.record(z.unknown()))),
 });
 
+// P9: Zod schemas for analysis IPC
+const analysisSubmitSchema = z.object({
+  extractionData: z.array(z.object({
+    platformId: z.string().min(1).max(64),
+    available: z.boolean(),
+    data: z.unknown().optional(),
+  })).min(1),
+  preferences: z.object({
+    budget: z.number().positive().optional(),
+    preferredPlatforms: z.array(z.string().min(1)).optional(),
+    categories: z.array(z.string().min(1)).optional(),
+    riskTolerance: z.enum(['low', 'medium', 'high']).optional(),
+    fulfillmentPreference: z.string().optional(),
+  }),
+  marketId: z.string().min(1).max(16),
+});
+
+const analysisIdSchema = z.string().uuid();
+
 export function registerIpcHandlers(
   _mainWindow: BrowserWindow,
   manager: ExtractionManager,
   payloadBuilder?: PayloadBuilder,
+  backendClient?: BackendClient,
 ): void {
   ipcMain.handle('extraction:open-view', (_event, platformId: unknown) => {
     console.log('[IPC] extraction:open-view received, platformId:', platformId);
@@ -78,6 +99,26 @@ export function registerIpcHandlers(
       return payloadBuilder.build(sessionId, preferences as any, normalized);
     });
   }
+
+  // ── Analysis IPC handlers (requires BackendClient) ──────────────
+
+  if (backendClient) {
+    ipcMain.handle('analysis:submit', async (_event, args: unknown) => {
+      const data = analysisSubmitSchema.parse(args);
+      const result = await backendClient.submitAnalysis(data);
+      return result;
+    });
+
+    ipcMain.handle('analysis:status', async (_event, analysisId: unknown) => {
+      const id = analysisIdSchema.parse(analysisId);
+      return backendClient.getAnalysisStatus(id);
+    });
+
+    ipcMain.handle('analysis:results', async (_event, analysisId: unknown) => {
+      const id = analysisIdSchema.parse(analysisId);
+      return backendClient.getAnalysisResults(id);
+    });
+  }
 }
 
 /** Remove all registered extraction IPC handlers (useful for testing). */
@@ -91,6 +132,9 @@ export function removeIpcHandlers(): void {
     'extraction:get-open-platforms',
     'extraction:hide-all',
     'payload:build',
+    'analysis:submit',
+    'analysis:status',
+    'analysis:results',
   ] as const;
   for (const channel of channels) {
     ipcMain.removeHandler(channel);

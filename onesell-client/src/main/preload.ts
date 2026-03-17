@@ -31,6 +31,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
     build: (sessionId: string, preferences: unknown, rawResults: unknown) =>
       ipcRenderer.invoke('payload:build', { sessionId, preferences, rawResults }),
   },
+  analysis: {
+    submit: (data: { extractionData: unknown[]; preferences: unknown; marketId: string }) =>
+      ipcRenderer.invoke('analysis:submit', data),
+    getStatus: (analysisId: string) =>
+      ipcRenderer.invoke('analysis:status', analysisId),
+    getResults: (analysisId: string) =>
+      ipcRenderer.invoke('analysis:results', analysisId),
+  },
 });
 
 // Type declaration is in src/renderer/electron.d.ts (added per feature)

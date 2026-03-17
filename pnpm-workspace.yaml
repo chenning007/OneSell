@@ -2,5 +2,6 @@ packages:
   - onesell-client
   - onesell-backend
 allowBuilds:
+  bcrypt: false
   electron: true
   esbuild: true
