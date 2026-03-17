@@ -11,6 +11,8 @@ const envSchema = z.object({
   JWT_PUBLIC_KEY: z.string().min(1),
   OPENAI_API_KEY: z.string().min(1),
   CORS_ORIGIN: z.string().default('http://localhost:5173'),
+  TLS_CERT_PATH: z.string().optional(),
+  TLS_KEY_PATH: z.string().optional(),
 });
 
 const parseResult = envSchema.safeParse(process.env);
