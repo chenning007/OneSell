@@ -21,6 +21,7 @@ import TaskPipeline from './TaskPipeline.js';
 import PlatformTabPanel from './PlatformTabPanel.js';
 import AutoTransitionBanner from './AutoTransitionBanner.js';
 import AdvancedPreferencesDrawer from '../wizard/AdvancedPreferencesDrawer.js';
+import { useAutonomousExtraction } from './useAutonomousExtraction.js';
 
 export default function ExtractionDashboard(): React.ReactElement {
   const market = useWizardStore((s) => s.market);
@@ -29,6 +30,8 @@ export default function ExtractionDashboard(): React.ReactElement {
   const allDone = useExtractionStore((s) => s.allDone);
   const cancel = useExtractionStore((s) => s.cancel);
   const [drawerOpen, setDrawerOpen] = useState(false);
+
+  useAutonomousExtraction();
 
   function handleCancel(): void {
     cancel();
@@ -79,7 +82,6 @@ export default function ExtractionDashboard(): React.ReactElement {
               <span style={{ fontSize: '20px' }}>
                 {MARKET_CONFIGS[market.marketId as keyof typeof MARKET_CONFIGS]?.flag ?? '🌍'}
               </span>
-              {market.marketId.toUpperCase()}
             </span>
           )}
           <h2 style={{ margin: 0, fontSize: '20px', color: '#2c3e50' }}>
