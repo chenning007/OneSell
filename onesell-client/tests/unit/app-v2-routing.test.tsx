@@ -11,7 +11,7 @@
  *   7. Old imports (Wizard, DataSourceConnect, ProgressScreen) removed
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import React from 'react';
 
@@ -19,6 +19,36 @@ import App from '../../src/renderer/App.js';
 import { useWizardStore } from '../../src/renderer/store/wizardStore.js';
 
 beforeEach(() => {
+  (window as unknown as Record<string, unknown>).electronAPI = {
+    extraction: {
+      openView: vi.fn(),
+      closeView: vi.fn(),
+      hideView: vi.fn(),
+      runExtraction: vi.fn(),
+      getCurrentUrl: vi.fn(),
+      getOpenPlatforms: vi.fn(),
+      hideAll: vi.fn(),
+      startPipeline: vi.fn(),
+      togglePlatform: vi.fn(),
+    },
+    payload: { build: vi.fn() },
+    analysis: { submit: vi.fn(), getStatus: vi.fn(), getResults: vi.fn() },
+    store: {
+      getProfile: vi.fn().mockResolvedValue(null),
+      setProfile: vi.fn().mockResolvedValue({ ok: true }),
+      clearProfile: vi.fn().mockResolvedValue({ ok: true }),
+      getPreferences: vi.fn().mockResolvedValue({}),
+      setPreferences: vi.fn().mockResolvedValue({ ok: true }),
+      getHistory: vi.fn().mockResolvedValue([]),
+      addHistory: vi.fn().mockResolvedValue({ ok: true }),
+    },
+    saveApiKey: vi.fn(),
+    hasApiKey: vi.fn(),
+    clearApiKey: vi.fn(),
+    agent: { runAnalysis: vi.fn() },
+    preferences: { getDefaults: vi.fn() },
+  };
+
   useWizardStore.setState({
     currentStep: 1,
     market: null,
@@ -29,10 +59,10 @@ beforeEach(() => {
 
 describe('App v2 routing (W-07)', () => {
   // AC-1: Step 0 → QuickStartScreen
-  it('renders QuickStartScreen at step 0', () => {
+  it('renders QuickStartScreen at step 0', async () => {
     useWizardStore.setState({ currentStep: 0 });
     render(<App />);
-    expect(screen.getByText('Quick Start')).toBeTruthy();
+    expect(await screen.findByText('Welcome back!')).toBeTruthy();
   });
 
   // AC-2: Step 1 → MarketSelection

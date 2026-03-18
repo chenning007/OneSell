@@ -66,4 +66,12 @@ export interface ExtractionScript {
 
   /** Normalizes raw page snapshots into canonical NormalizedPlatformData. */
   normalizeData(raw: RawPlatformData[]): NormalizedPlatformData;
+
+  /**
+   * (v2) Returns URLs the app should autonomously navigate for data discovery.
+   * Enables scripts to declare bestseller/trending pages without user input.
+   * Optional — scripts without this method still work via getNavigationTargets().
+   * PRD §5.9, ADR-005 D2.
+   */
+  getAutoDiscoveryUrls?(): Array<{ url: string; label: string }>;
 }

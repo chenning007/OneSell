@@ -124,11 +124,11 @@ describe('LocalStore', () => {
       expect(history[1].sessionId).toBe('sess-001');
     });
 
-    it('history is capped at 50 entries', () => {
-      for (let i = 0; i < 55; i++) {
+    it('history is capped at 10 entries', () => {
+      for (let i = 0; i < 15; i++) {
         store.addHistoryEntry({ ...testHistoryEntry, sessionId: `sess-${i}` });
       }
-      expect(store.getHistory()).toHaveLength(50);
+      expect(store.getHistory()).toHaveLength(10);
     });
   });
 

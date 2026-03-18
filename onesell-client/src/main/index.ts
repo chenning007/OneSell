@@ -6,6 +6,7 @@ import { PayloadBuilder } from './extraction/PayloadBuilder.js';
 import { registerIpcHandlers } from './ipc/handlers.js';
 import { LocalStore } from './store/LocalStore.js';
 import { ApiKeyManager } from './store/ApiKeyManager.js';
+import { initAutoUpdater } from './updater.js';
 // Import extraction scripts so they self-register with the registry on startup
 // M1 — US platform scripts
 import './extraction/scripts/amazon-us/index.js';
@@ -112,6 +113,9 @@ app.whenReady().then(() => {
   void Promise.all([localStore.ready(), apiKeyManager.ready()]).then(() => {
     registerIpcHandlers(win, manager, payloadBuilder, undefined, localStore, apiKeyManager);
   });
+
+  // Initialize auto-updater (F-17, #293) — graceful failure in dev
+  initAutoUpdater(win);
 
   win.on('closed', () => {
     manager.destroyAll();

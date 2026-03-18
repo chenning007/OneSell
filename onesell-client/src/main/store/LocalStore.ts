@@ -160,8 +160,8 @@ export class LocalStore {
 
   addHistoryEntry(entry: HistoryEntry): void {
     const history = this.getHistory();
-    // Keep the most recent 50 entries to avoid unbounded growth
-    const updated = [stripCredentials(entry), ...history].slice(0, 50);
+    // FIFO cap at 10 entries (F-15, #277 — PRD §8.6)
+    const updated = [stripCredentials(entry), ...history].slice(0, 10);
     this.#requireStore().set('history', updated);
   }
 }

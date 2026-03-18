@@ -11,7 +11,7 @@
  * Closes #243
  */
 
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import type { PipelineStatus, PipelineTask } from '../../store/extractionStore.js';
 import { useExtractionStore } from '../../store/extractionStore.js';
 
@@ -48,6 +48,67 @@ function rowText(task: PipelineTask): string {
   if (task.status === 'error') return `${task.label} — error`;
   if (task.status === 'needs-login') return `${task.label} — login required`;
   return task.label;
+}
+
+// ── Time estimate helpers (E-29, #287, PRD §5.8) ───────────────────
+
+function formatSeconds(seconds: number): string {
+  if (seconds < 60) return `${seconds}s`;
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return s > 0 ? `${m}m ${s}s` : `${m}m`;
+}
+
+function formatEstimate(seconds: number): string {
+  return `~${formatSeconds(seconds)}`;
+}
+
+/** Hook: returns elapsed seconds updated every second while active. */
+function useElapsedSeconds(startedAt: string | null, isRunning: boolean): number {
+  const [elapsed, setElapsed] = useState(0);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    if (!startedAt || !isRunning) {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      intervalRef.current = null;
+      return;
+    }
+
+    function tick(): void {
+      const start = new Date(startedAt!).getTime();
+      setElapsed(Math.max(0, Math.floor((Date.now() - start) / 1000)));
+    }
+
+    tick();
+    intervalRef.current = setInterval(tick, 1000);
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [startedAt, isRunning]);
+
+  return elapsed;
+}
+
+function timeDisplay(task: PipelineTask, elapsedSeconds: number): string | null {
+  if (!task.enabled) return null;
+  switch (task.status) {
+    case 'queued':
+      return formatEstimate(task.estimatedSeconds);
+    case 'active':
+      return formatSeconds(elapsedSeconds);
+    case 'done': {
+      if (task.startedAt && task.completedAt) {
+        const actual = Math.max(0, Math.floor(
+          (new Date(task.completedAt).getTime() - new Date(task.startedAt).getTime()) / 1000,
+        ));
+        return formatSeconds(actual);
+      }
+      return null;
+    }
+    default:
+      return null;
+  }
 }
 
 // ── Toggle Switch ───────────────────────────────────────────────────
@@ -98,6 +159,8 @@ export default function TaskPipelineRow({ task }: TaskPipelineRowProps): React.R
   const updateTask = useExtractionStore((s) => s.updateTask);
   const isActive = task.status === 'active';
   const effectiveStatus: PipelineStatus = task.enabled ? task.status : 'disabled';
+  const elapsedSeconds = useElapsedSeconds(task.startedAt, isActive && task.enabled);
+  const time = timeDisplay(task, elapsedSeconds);
 
   function handleToggle(enabled: boolean): void {
     updateTask(task.platformId, { enabled, status: enabled ? 'queued' : 'disabled' });
@@ -153,6 +216,24 @@ export default function TaskPipelineRow({ task }: TaskPipelineRowProps): React.R
           {rowText(task)}
         </div>
       </div>
+
+      {/* Time estimate / elapsed / actual (E-29, #287, PRD §5.8) */}
+      {time && (
+        <span
+          data-testid={`time-display-${task.platformId}`}
+          style={{
+            fontSize: '12px',
+            fontWeight: isActive ? 600 : 400,
+            color: isActive ? '#3498db' : task.status === 'done' ? '#27ae60' : '#95a5a6',
+            whiteSpace: 'nowrap',
+            fontVariantNumeric: 'tabular-nums',
+            minWidth: '48px',
+            textAlign: 'right',
+          }}
+        >
+          {time}
+        </span>
+      )}
 
       {/* Toggle switch */}
       <ToggleSwitch checked={task.enabled} onChange={handleToggle} />

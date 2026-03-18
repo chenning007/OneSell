@@ -57,6 +57,7 @@ export default function PlatformTabPanel(): React.ReactElement {
   const tasks = useExtractionStore((s) => s.tasks);
   const [selectedTab, setSelectedTab] = useState<string | null>(null);
   const manualOverride = useRef(false);
+  const [collapsed, setCollapsed] = useState(false);
 
   // Find the currently active extraction platform
   const activePlatformId = tasks.find((t) => t.status === 'active')?.platformId ?? null;
@@ -95,6 +96,7 @@ export default function PlatformTabPanel(): React.ReactElement {
           borderBottom: '2px solid #dfe6e9',
           overflowX: 'auto',
           gap: '2px',
+          alignItems: 'center',
         }}
       >
         {tasks.map((task) => {
@@ -134,25 +136,46 @@ export default function PlatformTabPanel(): React.ReactElement {
             </button>
           );
         })}
+
+        {/* Collapse/expand toggle (E-31, #289, PRD §5.10) */}
+        <button
+          data-testid="collapse-toggle"
+          aria-label={collapsed ? 'Expand tab panel' : 'Collapse tab panel'}
+          onClick={() => setCollapsed((c) => !c)}
+          style={{
+            marginLeft: 'auto',
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            fontSize: '14px',
+            color: '#7f8c8d',
+            padding: '8px 10px',
+            flexShrink: 0,
+          }}
+        >
+          {collapsed ? '▲' : '▼'}
+        </button>
       </div>
 
-      {/* Content area */}
-      <div
-        data-testid="tab-content"
-        style={{
-          minHeight: '200px',
-          background: '#fafafa',
-          borderRadius: '0 0 8px 8px',
-        }}
-      >
-        {selectedTask ? (
-          <PlatformTabContent task={selectedTask} />
-        ) : (
-          <div style={{ padding: '20px', color: '#95a5a6', textAlign: 'center' }}>
-            No platform selected
-          </div>
-        )}
-      </div>
+      {/* Content area — hidden when collapsed (E-31, #289) */}
+      {!collapsed && (
+        <div
+          data-testid="tab-content"
+          style={{
+            minHeight: '200px',
+            background: '#fafafa',
+            borderRadius: '0 0 8px 8px',
+          }}
+        >
+          {selectedTask ? (
+            <PlatformTabContent task={selectedTask} />
+          ) : (
+            <div style={{ padding: '20px', color: '#95a5a6', textAlign: 'center' }}>
+              No platform selected
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

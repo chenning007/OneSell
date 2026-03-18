@@ -11,10 +11,20 @@
  *   P7 — Extensible pipeline: ProductCard contract preserved
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { useAnalysisStore } from '../../src/renderer/store/analysisStore.js';
 import type { ProductCard } from '../../src/shared/types/index.js';
 import type { CandidateCategory, AnalysisResult, ProductCandidate } from '../../src/shared/types/index.js';
+
+// ── Mock window.electronAPI (F-15 addHistory call) ──────────────────
+
+beforeEach(() => {
+  (window as unknown as Record<string, unknown>).electronAPI = {
+    store: {
+      addHistory: vi.fn().mockResolvedValue(undefined),
+    },
+  };
+});
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
@@ -72,7 +82,9 @@ function makeAnalysisResult(categories: CandidateCategory[]): AnalysisResult {
     categories,
     generatedAt: '2026-03-15T12:00:00Z',
     marketId: 'us',
-  };
+    sessionId: 'test-session-001',
+    market: { marketId: 'us' },
+  } as AnalysisResult;
 }
 
 // ═══════════════════════════════════════════════════════════════════

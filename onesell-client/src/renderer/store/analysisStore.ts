@@ -70,6 +70,17 @@ export const useAnalysisStore = create<AnalysisState & AnalysisActions>((set) =>
       const categories = [...input.categories];
       const results = flattenCandidates(input.categories);
       set({ categories, results, status: 'complete', error: null });
+
+      // F-15 (#277): Auto-save session to history after analysis completes (PRD §8.6)
+      const totalProducts = results.length;
+      const topProduct = results[0]?.productName ?? '';
+      void window.electronAPI.store.addHistory({
+        sessionId: input.sessionId,
+        marketId: input.market.marketId,
+        timestamp: input.generatedAt,
+        productCount: totalProducts,
+        categoryCount: categories.length,
+      }).catch(() => { /* non-critical */ });
     }
   },
 

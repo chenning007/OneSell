@@ -117,6 +117,13 @@ export const taobaoScript: ExtractionScript = {
       listings: allListings,
     };
   },
+
+  getAutoDiscoveryUrls() {
+    return [
+      { url: 'https://www.taobao.com/markets/hot', label: '淘宝热销' },
+      { url: 'https://www.taobao.com/markets/niche', label: '淘宝小众好物' },
+    ];
+  },
 };
 
 registry.register(taobaoScript);

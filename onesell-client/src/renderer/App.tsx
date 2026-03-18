@@ -14,6 +14,7 @@
 
 import React from 'react';
 import { useWizardStore } from './store/wizardStore.js';
+import QuickStartScreen from './modules/wizard/QuickStartScreen.js';
 import MarketSelection from './modules/wizard/MarketSelection.js';
 import ExtractionDashboard from './modules/extraction/ExtractionDashboard.js';
 import AgentAnalysisScreen from './modules/analysis/AgentAnalysisScreen.js';
@@ -22,16 +23,6 @@ import ProductDetail from './modules/results/ProductDetail.js';
 import DebugPanel from './components/DebugPanel.js';
 import GlobalStyles from './components/GlobalStyles.js';
 import FadeTransition from './components/FadeTransition.js';
-
-// ── Placeholder components for screens not yet implemented ──────────
-
-function QuickStartScreen(): React.ReactElement {
-  return (
-    <div style={{ fontFamily: 'system-ui, sans-serif', textAlign: 'center', paddingTop: '20vh' }}>
-      <h2>Quick Start</h2>
-    </div>
-  );
-}
 
 // ── Step → Screen mapping ───────────────────────────────────────────
 

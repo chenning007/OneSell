@@ -40,6 +40,12 @@ export interface PipelineTask {
   enabled: boolean;
   requiresAuth: boolean;
   progressEvents: ExtractionProgressEvent[];
+  /** Estimated extraction time in seconds (default 120). PRD §5.8, E-29. */
+  estimatedSeconds: number;
+  /** ISO 8601 timestamp when extraction started for this task. */
+  startedAt: string | null;
+  /** ISO 8601 timestamp when extraction completed for this task. */
+  completedAt: string | null;
 }
 
 // ── Computed helpers ────────────────────────────────────────────────
@@ -107,6 +113,9 @@ export const useExtractionStore = create<ExtractionState>((set) => ({
         enabled: true,
         requiresAuth: needsAuth,
         progressEvents: [],
+        estimatedSeconds: 120,
+        startedAt: null,
+        completedAt: null,
       };
     });
 
