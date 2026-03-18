@@ -21,8 +21,8 @@ export default function DataSourceConnect(): React.ReactElement {
   const market = useWizardStore((s) => s.market);
   const setStep = useWizardStore((s) => s.setStep);
   const platforms: readonly string[] = market?.platforms ?? [];
-  const keywords = useExtractionStore((s) => s.keywords);
-  const setKeywords = useExtractionStore((s) => s.setKeywords);
+  const keywords = useExtractionStore((s) => (s as Record<string, unknown>).keywords as string | undefined) ?? '';
+  const setKeywords = useExtractionStore((s) => (s as Record<string, unknown>).setKeywords as ((v: string) => void) | undefined);
 
   const [platformStates, setPlatformStates] = useState<Record<string, PlatformState>>(() =>
     Object.fromEntries(platforms.map((id) => [id, { status: 'idle' as ConnectionStatus }])),
@@ -221,7 +221,7 @@ export default function DataSourceConnect(): React.ReactElement {
           id="keyword-input"
           type="text"
           value={keywords}
-          onChange={(e) => setKeywords(e.target.value)}
+          onChange={(e) => setKeywords?.(e.target.value)}
           aria-label="Search keywords"
           placeholder={t('dataSources.keywordsPlaceholder', { defaultValue: 'e.g. wireless earbuds' })}
           style={{

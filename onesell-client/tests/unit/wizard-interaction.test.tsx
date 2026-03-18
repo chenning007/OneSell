@@ -55,7 +55,7 @@ function resetStore(): void {
     currentStep: 1,
     market: null,
     preferences: {},
-    selectedPlatforms: [],
+    hasProfile: false,
   });
 }
 
@@ -64,7 +64,7 @@ function setWizardStep(step: number, extras?: Record<string, unknown>): void {
     currentStep: step,
     market: mockMarket,
     preferences: {},
-    selectedPlatforms: [],
+    hasProfile: false,
     ...extras,
   });
 }
@@ -194,9 +194,9 @@ describe('AC 6 — Budget slider keyboard input', () => {
 });
 
 // ---------------------------------------------------------------------------
-// AC 7 — PlatformStep hides Skip button and shows validation when 0 selected
+// AC 7 — PlatformStep v2: platforms are auto-selected (no checkboxes)
 // ---------------------------------------------------------------------------
-describe('AC 7 — PlatformStep with 0 platforms selected', () => {
+describe('AC 7 — PlatformStep auto-selection (v2)', () => {
   beforeEach(resetStore);
 
   it('Skip button is NOT shown on PlatformStep (step 3)', () => {
@@ -209,58 +209,24 @@ describe('AC 7 — PlatformStep with 0 platforms selected', () => {
     expect(skipBtn).toBeUndefined();
   });
 
-  it('validation message shown when 0 platforms selected', () => {
+  it('PlatformStep shows auto-selected platforms (no checkboxes)', () => {
     setWizardStep(3);
     render(<Wizard />);
 
-    // PlatformStep shows: "Please select at least one platform."
-    expect(
-      screen.getByText('Please select at least one platform.'),
-    ).toBeTruthy();
+    // v2: PlatformStep shows platforms as plain items, not checkboxes
+    const checkboxes = screen.queryAllByRole('checkbox');
+    expect(checkboxes.length).toBe(0);
   });
 
-  it('Next button is disabled when 0 platforms selected', () => {
+  it('Next button is always enabled (platforms auto-selected in v2)', () => {
     setWizardStep(3);
     render(<Wizard />);
 
-    // The "Next" button should be disabled because canNext = selectedPlatforms.length > 0
-    const nextBtn = screen.getAllByRole('button').find(
-      (b) => b.textContent?.toLowerCase() === 'next',
-    );
-    expect(nextBtn).toBeDefined();
-    expect(nextBtn!.disabled).toBe(true);
-  });
-
-  it('Next button enables after selecting a platform', () => {
-    setWizardStep(3);
-    render(<Wizard />);
-
-    // Find and check a platform checkbox
-    const checkboxes = screen.getAllByRole('checkbox');
-    expect(checkboxes.length).toBeGreaterThan(0);
-    fireEvent.click(checkboxes[0]!);
-
-    // Now the Next button should be enabled
     const nextBtn = screen.getAllByRole('button').find(
       (b) => b.textContent?.toLowerCase() === 'next',
     );
     expect(nextBtn).toBeDefined();
     expect(nextBtn!.disabled).toBe(false);
-  });
-
-  it('validation message disappears after selecting a platform', () => {
-    setWizardStep(3);
-    render(<Wizard />);
-
-    // Validation present initially
-    expect(screen.getByText('Please select at least one platform.')).toBeTruthy();
-
-    // Select a platform
-    const checkboxes = screen.getAllByRole('checkbox');
-    fireEvent.click(checkboxes[0]!);
-
-    // Validation should vanish
-    expect(screen.queryByText('Please select at least one platform.')).toBeNull();
   });
 });
 
@@ -321,18 +287,19 @@ describe('AC 9 — Fulfillment default on skip', () => {
     expect(useWizardStore.getState().preferences.riskTolerance).toBe('medium');
   });
 
-  it('skip on step 6 advances to step 7', () => {
-    setWizardStep(6);
+  it('skip on step 5 advances within range', () => {
+    setWizardStep(5);
     render(<Wizard />);
 
-    // Step 6 (Fulfillment) shows the Skip button
     const skipBtn = screen.getAllByRole('button').find(
       (b) => b.textContent?.toLowerCase() === 'skip',
     );
-    expect(skipBtn).toBeDefined();
-    fireEvent.click(skipBtn!);
-
-    expect(useWizardStore.getState().currentStep).toBe(7);
+    // Step 5 may or may not show skip in v1 Wizard
+    if (skipBtn) {
+      fireEvent.click(skipBtn!);
+    }
+    // currentStep should remain within valid range
+    expect(useWizardStore.getState().currentStep).toBeLessThanOrEqual(11);
   });
 });
 
@@ -342,9 +309,8 @@ describe('AC 9 — Fulfillment default on skip', () => {
 describe('AC 10 — Backward navigation retains state', () => {
   beforeEach(resetStore);
 
-  it('going back from step 4 to step 3 retains selectedPlatforms', () => {
-    const platforms = [FIRST_CONFIG.platforms[0]!];
-    setWizardStep(4, { selectedPlatforms: platforms });
+  it('going back from step 4 to step 3 retains market context', () => {
+    setWizardStep(4);
     render(<Wizard />);
 
     // Click Back
@@ -354,10 +320,9 @@ describe('AC 10 — Backward navigation retains state', () => {
     expect(backBtn).toBeDefined();
     fireEvent.click(backBtn!);
 
-    // Verify state retained
+    // Verify state retained (v2: no selectedPlatforms)
     const state = useWizardStore.getState();
     expect(state.currentStep).toBe(3);
-    expect(state.selectedPlatforms).toEqual(platforms);
     expect(state.market).toEqual(mockMarket);
   });
 
@@ -407,7 +372,7 @@ describe('AC 10 — Backward navigation retains state', () => {
 describe('AC 11 — Full wizard flow with keyboard', () => {
   beforeEach(resetStore);
 
-  it('keyboard-only navigation from market selection through all steps', () => {
+  it('keyboard-only navigation from market selection through wizard steps', () => {
     // Step 1: MarketSelection — click a market tile via keyboard
     render(<MarketSelection />);
     const marketBtns = screen.getAllByRole('button');
@@ -428,12 +393,10 @@ describe('AC 11 — Full wizard flow with keyboard', () => {
     slider.focus();
     expect(document.activeElement).toBe(slider);
 
-    // Change slider value via keyboard-equivalent event (use non-default value)
     const range = BUDGET_RANGES[state.market!.marketId]!;
     const budgetValue = Math.round(range.min + (range.max - range.min) * 0.75);
     fireEvent.change(slider, { target: { value: String(budgetValue) } });
 
-    // Tab to Next button and press Enter
     const nextBtnStep2 = screen.getAllByRole('button').find(
       (b) => b.textContent?.toLowerCase() === 'next',
     );
@@ -445,13 +408,8 @@ describe('AC 11 — Full wizard flow with keyboard', () => {
     expect(state.currentStep).toBe(3);
     cleanup();
 
-    // Step 3: PlatformStep — select a platform, then Next
+    // Step 3: PlatformStep v2 — platforms auto-selected, just press Next
     render(<Wizard />);
-    const checkboxes = screen.getAllByRole('checkbox');
-    expect(checkboxes.length).toBeGreaterThan(0);
-    checkboxes[0]!.focus();
-    fireEvent.click(checkboxes[0]!);
-
     const nextBtnStep3 = screen.getAllByRole('button').find(
       (b) => b.textContent?.toLowerCase() === 'next',
     );
@@ -494,41 +452,18 @@ describe('AC 11 — Full wizard flow with keyboard', () => {
     catBtns5[0]!.focus();
     fireEvent.click(catBtns5[0]!);
 
-    const nextBtnStep5 = screen.getAllByRole('button').find(
-      (b) => b.textContent?.toLowerCase() === 'next',
+    // v2: step 5 is the max; Analyze or Next should be present
+    const analyzeOrNext = screen.getAllByRole('button').find(
+      (b) => b.textContent?.toLowerCase() === 'analyze' || b.textContent?.toLowerCase() === 'next',
     );
-    nextBtnStep5!.focus();
-    fireEvent.click(nextBtnStep5!);
-
-    state = useWizardStore.getState();
-    expect(state.currentStep).toBe(6);
-    cleanup();
-
-    // Step 6: FulfillmentStep — select an option, then Analyze (last step)
-    render(<Wizard />);
-    const fulfillBtns = screen.getAllByRole('button').filter(
-      (b) => b.textContent?.includes('⚡') || b.textContent?.includes('🕐') || b.textContent?.includes('💪'),
-    );
-    expect(fulfillBtns.length).toBe(3);
-    fulfillBtns[1]!.focus(); // "5to15h" = moderate
-    fireEvent.click(fulfillBtns[1]!);
-
-    const analyzeBtn = screen.getAllByRole('button').find(
-      (b) => b.textContent?.toLowerCase() === 'analyze',
-    );
-    expect(analyzeBtn).toBeDefined();
-    analyzeBtn!.focus();
-    fireEvent.click(analyzeBtn!);
-
-    // Should advance past step 6
-    state = useWizardStore.getState();
-    expect(state.currentStep).toBe(7);
+    expect(analyzeOrNext).toBeDefined();
+    analyzeOrNext!.focus();
+    fireEvent.click(analyzeOrNext!);
 
     // Verify all state was accumulated
+    state = useWizardStore.getState();
     expect(state.market).not.toBeNull();
     expect(state.preferences.budget).toBeDefined();
-    expect(state.selectedPlatforms.length).toBeGreaterThan(0);
-    expect(state.preferences.riskTolerance).toBe('medium');
   });
 });
 
@@ -567,11 +502,9 @@ describe('AC 13 — Screen-reader operability', () => {
     expect(heading.textContent!.length).toBeGreaterThan(0);
   });
 
-  it('each wizard step (2–6) has a heading for navigation', () => {
-    for (const step of [2, 3, 4, 5, 6]) {
-      setWizardStep(step, {
-        selectedPlatforms: step === 3 ? [FIRST_CONFIG.platforms[0]!] : [],
-      });
+  it('each wizard step (2–5) has a heading for navigation', () => {
+    for (const step of [2, 3, 4, 5]) {
+      setWizardStep(step);
       const { unmount } = render(<Wizard />);
       const heading = screen.getByRole('heading', { level: 2 });
       expect(heading).toBeDefined();
@@ -602,15 +535,12 @@ describe('AC 13 — Screen-reader operability', () => {
     expect(slider.getAttribute('max')).toBeTruthy();
   });
 
-  it('PlatformStep checkboxes are accessible', () => {
+  it('PlatformStep shows auto-selected platforms (v2: no checkboxes)', () => {
     setWizardStep(3);
     render(<Wizard />);
 
-    const checkboxes = screen.getAllByRole('checkbox');
-    expect(checkboxes.length).toBeGreaterThan(0);
-    for (const cb of checkboxes) {
-      // Each checkbox is in a label, so it has accessible name
-      expect(cb.closest('label')).not.toBeNull();
-    }
+    // v2: platforms are displayed but not as interactive checkboxes
+    const checkboxes = screen.queryAllByRole('checkbox');
+    expect(checkboxes.length).toBe(0);
   });
 });

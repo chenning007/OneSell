@@ -17,6 +17,7 @@
     "test:unit": "vitest run tests/unit"
   },
   "dependencies": {
+    "electron-store": "^11.0.2",
     "i18next": "^25.8.18",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",

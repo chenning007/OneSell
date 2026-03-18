@@ -33,7 +33,7 @@ function resetStore(): void {
     currentStep: 1,
     market: null,
     preferences: {},
-    selectedPlatforms: [],
+    hasProfile: false,
   });
 }
 

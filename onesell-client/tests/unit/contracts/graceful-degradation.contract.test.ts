@@ -50,11 +50,11 @@ describe('Contract: Graceful Degradation (P5)', () => {
     expect(reg.getForMarket('mars')).toEqual([]);
   });
 
-  it('extractionStore handles setStatus for non-initialized platform gracefully', () => {
+  it('extractionStore handles updateTask for non-initialized platform gracefully', () => {
     const store = useExtractionStore;
     store.getState().reset();
-    // setStatus on uninitialized platform — should not throw
-    expect(() => store.getState().setStatus('unknown', 'done', 5)).not.toThrow();
+    // updateTask on uninitialized platform — should not throw
+    expect(() => store.getState().updateTask('unknown', { status: 'done', productCount: 5 })).not.toThrow();
   });
 
   it('extractionStore allDone is false when no platforms initialized', () => {
@@ -65,7 +65,7 @@ describe('Contract: Graceful Degradation (P5)', () => {
 
   it('wizardStore works with null market', () => {
     const store = useWizardStore;
-    store.setState({ market: null, currentStep: 1, preferences: {}, selectedPlatforms: [] });
+    store.setState({ market: null, currentStep: 1, preferences: {}, hasProfile: false });
     expect(store.getState().market).toBeNull();
     expect(store.getState().currentStep).toBe(1);
   });

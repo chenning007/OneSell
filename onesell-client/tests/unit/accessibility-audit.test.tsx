@@ -17,6 +17,11 @@ import { render, screen, within, cleanup, fireEvent } from '@testing-library/rea
 import React from 'react';
 import { I18nextProvider } from 'react-i18next';
 
+// Mock useExtractionRunner to prevent IPC calls during ProgressScreen render
+vi.mock('../../src/renderer/modules/progress/useExtractionRunner.js', () => ({
+  useExtractionRunner: () => ({ rawResults: new Map(), isRunning: false }),
+}));
+
 import MarketSelection from '../../src/renderer/modules/wizard/MarketSelection.js';
 import WizardLayout from '../../src/renderer/modules/wizard/WizardLayout.js';
 import DataSourceConnect from '../../src/renderer/modules/data-sources/DataSourceConnect.js';
@@ -111,7 +116,7 @@ afterEach(() => {
 // ===========================================================================
 describe('A11y: MarketSelection', () => {
   beforeEach(() => {
-    useWizardStore.setState({ currentStep: 1, market: null, preferences: {}, selectedPlatforms: [] });
+    useWizardStore.setState({ currentStep: 1, market: null, preferences: {}, hasProfile: false });
   });
 
   it('renders an h1 heading for the page title', () => {
@@ -211,12 +216,11 @@ describe('A11y: WizardLayout', () => {
 describe('A11y: DataSourceConnect', () => {
   beforeEach(() => {
     useWizardStore.setState({
-      currentStep: 7,
+      currentStep: 2,
       market: mockMarket,
       preferences: {},
-      selectedPlatforms: [],
+      hasProfile: false,
     });
-    useExtractionStore.setState({ keywords: '' });
   });
 
   it('page has an h2 heading', () => {
@@ -266,20 +270,26 @@ describe('A11y: DataSourceConnect', () => {
 describe('A11y: ProgressScreen', () => {
   beforeEach(() => {
     useWizardStore.setState({
-      currentStep: 8,
+      currentStep: 2,
       market: mockMarket,
       preferences: {},
-      selectedPlatforms: mockMarket.platforms as string[],
+      hasProfile: false,
     });
     useExtractionStore.setState({
-      platforms: (mockMarket.platforms as string[]).map((id) => ({
+      tasks: (mockMarket.platforms as string[]).map((id) => ({
         platformId: id,
-        status: 'waiting' as const,
+        status: 'queued' as const,
+        label: `Scanning ${id}…`,
+        doneLabel: '',
         productCount: 0,
+        enabled: true,
+        requiresAuth: false,
+        progressEvents: [],
       })),
       cancelled: false,
       allDone: false,
-      keywords: '',
+      canAnalyze: false,
+      activeTab: null,
     });
   });
 
@@ -321,11 +331,12 @@ describe('A11y: ResultsDashboard', () => {
     useAnalysisStore.setState({
       analysisId: 'a1',
       status: 'complete',
+      categories: [{ name: 'Test Category', products: [CARD as any] }],
       results: [CARD],
       error: null,
       selectedCardId: null,
     });
-    useWizardStore.setState({ currentStep: 10 });
+    useWizardStore.setState({ currentStep: 4 });
   });
 
   it('renders an h1 heading for Results', async () => {
