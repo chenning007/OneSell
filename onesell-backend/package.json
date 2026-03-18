@@ -23,7 +23,7 @@
     "@fastify/cors": "^10.0.0",
     "@fastify/jwt": "^9.0.0",
     "@fastify/rate-limit": "^10.0.0",
-    "ai": "^4.0.0",
+    "ai": "^6.0.116",
     "bcryptjs": "^3.0.3",
     "dotenv": "^16.4.0",
     "drizzle-orm": "^0.33.0",
