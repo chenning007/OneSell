@@ -21,6 +21,7 @@ const mockGetURL = vi.fn(() => 'https://trends.google.com');
 const mockExecuteJavaScript = vi.fn();
 const mockDestroy = vi.fn();
 const mockOnce = vi.fn();
+const mockOn = vi.fn();
 const mockRemoveListener = vi.fn();
 
 vi.mock('electron', () => {
@@ -33,6 +34,7 @@ vi.mock('electron', () => {
         executeJavaScript: mockExecuteJavaScript,
         destroy: mockDestroy,
         once: mockOnce,
+        on: mockOn,
         removeListener: mockRemoveListener,
       },
     })),

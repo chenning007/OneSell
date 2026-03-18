@@ -50,6 +50,20 @@ export function useAutonomousExtraction(): void {
     // Start the extraction pipeline via IPC
     void window.electronAPI.extraction.startPipeline(market.marketId);
 
+    // W-13 (#267): Auto-save profile when extraction starts (PRD §3.5)
+    void (async () => {
+      try {
+        await window.electronAPI.store.setProfile({
+          marketId: market.marketId,
+          extractionMode: 'auto-discover',
+          lastSessionAt: new Date().toISOString(),
+        });
+        useWizardStore.getState().setHasProfile(true);
+      } catch {
+        // Non-critical — profile save failure should not block extraction
+      }
+    })();
+
     // Set up IPC event listeners
     const ipcRenderer = (window as Record<string, unknown>)['__electronIpcRenderer'] as {
       on(channel: string, callback: (...args: unknown[]) => void): void;

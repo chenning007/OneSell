@@ -100,6 +100,13 @@ export const alibabaChScript: ExtractionScript = {
       listings: allListings,
     };
   },
+
+  getAutoDiscoveryUrls() {
+    return [
+      { url: 'https://www.1688.com/huo/', label: '1688找货' },
+      { url: 'https://re.1688.com/', label: '1688热销' },
+    ];
+  },
 };
 
 registry.register(alibabaChScript);

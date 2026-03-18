@@ -153,6 +153,13 @@ export const jdScript: ExtractionScript = {
       listings: allListings,
     };
   },
+
+  getAutoDiscoveryUrls() {
+    return [
+      { url: 'https://www.jd.com/rankings', label: '京东排行榜' },
+      { url: 'https://www.jd.com/xinfan', label: '京东新品' },
+    ];
+  },
 };
 
 registry.register(jdScript);

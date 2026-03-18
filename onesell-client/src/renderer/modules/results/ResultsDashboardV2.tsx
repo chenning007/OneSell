@@ -10,7 +10,7 @@
  * Closes #255
  */
 
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import { useAnalysisStore } from '../../store/analysisStore.js';
 import { useWizardStore } from '../../store/wizardStore.js';
 import CategoryGroup from './CategoryGroup.js';
@@ -47,9 +47,13 @@ function exportCsv(categories: ReadonlyArray<{ name: string; products: ReadonlyA
 
 export default function ResultsDashboardV2(): React.ReactElement {
   const categories = useAnalysisStore((s) => s.categories);
+  const analysisId = useAnalysisStore((s) => s.analysisId);
   const market = useWizardStore((s) => s.market);
+  const [saved, setSaved] = useState(false);
+  const [showToast, setShowToast] = useState(false);
 
   function handleReAnalyze(): void {
+    setSaved(false); // reset saved state for new analysis
     void window.electronAPI.agent.runAnalysis(market?.marketId ?? 'us');
   }
 
@@ -57,9 +61,20 @@ export default function ResultsDashboardV2(): React.ReactElement {
     exportCsv(categories);
   }
 
-  function handleSaveToList(): void {
-    // Placeholder — will be wired to LocalStore in a future task
-  }
+  const handleSaveToList = useCallback(async (): Promise<void> => {
+    if (saved) return;
+    const entry = {
+      sessionId: analysisId ?? `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      marketId: market?.marketId ?? 'us',
+      timestamp: new Date().toISOString(),
+      productCount: categories.reduce((sum, cat) => sum + cat.products.length, 0),
+      categoryCount: categories.length,
+    };
+    await window.electronAPI.store.addHistory(entry);
+    setSaved(true);
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 2000);
+  }, [saved, analysisId, market, categories]);
 
   const isEmpty = categories.length === 0;
 
@@ -146,21 +161,45 @@ export default function ResultsDashboardV2(): React.ReactElement {
         </button>
         <button
           data-testid="save-to-list-button"
-          onClick={handleSaveToList}
+          onClick={() => void handleSaveToList()}
+          disabled={saved}
           style={{
             padding: '8px 16px',
-            border: '1px solid #f39c12',
+            border: `1px solid ${saved ? '#27ae60' : '#f39c12'}`,
             borderRadius: '6px',
             background: '#fff',
-            color: '#f39c12',
+            color: saved ? '#27ae60' : '#f39c12',
             fontSize: '13px',
             fontWeight: 600,
-            cursor: 'pointer',
+            cursor: saved ? 'default' : 'pointer',
+            opacity: saved ? 0.8 : 1,
           }}
         >
-          Save to My List ★
+          {saved ? '✓ Saved' : 'Save to My List ★'}
         </button>
       </div>
+
+      {/* ── Save toast (R-13, #295, PRD §8.7) ───────────────────── */}
+      {showToast && (
+        <div
+          data-testid="save-toast"
+          style={{
+            position: 'fixed',
+            bottom: '24px',
+            right: '24px',
+            background: '#27ae60',
+            color: '#fff',
+            padding: '10px 20px',
+            borderRadius: '8px',
+            fontSize: '14px',
+            fontWeight: 600,
+            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+            zIndex: 1000,
+          }}
+        >
+          Saved!
+        </div>
+      )}
 
       {/* ── Category groups or empty state ───────────────────────── */}
       {isEmpty ? (

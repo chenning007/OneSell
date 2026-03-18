@@ -157,6 +157,14 @@ export const amazonUsScript: ExtractionScript = {
       listings: allListings,
     };
   },
+
+  getAutoDiscoveryUrls() {
+    return [
+      { url: 'https://www.amazon.com/Best-Sellers/zgbs', label: 'Amazon Best Sellers' },
+      { url: 'https://www.amazon.com/movers-and-shakers/zgbs', label: 'Amazon Movers & Shakers' },
+      { url: 'https://www.amazon.com/new-releases/zgbs', label: 'Amazon New Releases' },
+    ];
+  },
 };
 
 registry.register(amazonUsScript);

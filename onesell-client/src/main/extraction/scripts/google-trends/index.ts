@@ -148,6 +148,12 @@ export const googleTrendsScript: ExtractionScript = {
       trendData: trendDataOut,
     };
   },
+
+  getAutoDiscoveryUrls() {
+    return [
+      { url: 'https://trends.google.com/trending?geo=US', label: 'Google Trending US' },
+    ];
+  },
 };
 
 registry.register(googleTrendsScript);

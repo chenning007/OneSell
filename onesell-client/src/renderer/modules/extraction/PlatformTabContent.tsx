@@ -15,6 +15,7 @@
 
 import React from 'react';
 import type { PipelineTask } from '../../store/extractionStore.js';
+import ExtractionLog from './ExtractionLog.js';
 
 export interface PlatformTabContentProps {
   task: PipelineTask;
@@ -68,31 +69,8 @@ function ActiveContent({ task }: { task: PipelineTask }): React.ReactElement {
           Extracting data...
         </span>
       </div>
-      {/* Mini extraction log area */}
-      <div style={{
-        background: '#1e1e1e',
-        borderRadius: '6px',
-        padding: '12px',
-        maxHeight: '200px',
-        overflowY: 'auto',
-        fontFamily: 'monospace',
-        fontSize: '12px',
-        color: '#d4d4d4',
-      }}>
-        {task.progressEvents.length === 0 ? (
-          <div style={{ color: '#7f8c8d' }}>Waiting for extraction events...</div>
-        ) : (
-          task.progressEvents.map((event, i) => (
-            <div key={i} style={{ marginBottom: '4px' }}>
-              <span style={{ color: '#6a9955' }}>{event.timestamp.slice(11, 19)}</span>
-              {' '}
-              {event.field && <span style={{ color: '#569cd6' }}>[{event.field}]</span>}
-              {' '}
-              <span>{event.message}</span>
-            </div>
-          ))
-        )}
-      </div>
+      {/* Mini extraction log (E-17, #271) */}
+      <ExtractionLog events={task.progressEvents} />
     </div>
   );
 }

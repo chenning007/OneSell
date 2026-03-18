@@ -17,6 +17,14 @@ export interface ExtractionEventEmitter {
   progressEvent(platformId: string, message: string, field?: string): void;
 }
 
+/** Callback for per-field progress events from extraction scripts (E-19, #273). */
+export interface ExtractionProgressCallback {
+  (event: { field: string; value?: string; status: 'done' | 'in-progress' | 'pending' }): void;
+}
+
+/** URL patterns indicating a login/auth page (E-21, #275). */
+const LOGIN_URL_PATTERNS = ['login', 'signin', 'sign-in', 'auth', 'passport', 'sign_in'];
+
 /** Platforms that require user authentication before extraction. */
 const AUTH_REQUIRED_PLATFORMS: ReadonlySet<string> = new Set([
   'amazon-us', 'amazon-uk', 'amazon-de', 'amazon-jp', 'amazon-au',
@@ -42,6 +50,8 @@ const AUTH_REQUIRED_PLATFORMS: ReadonlySet<string> = new Set([
 export class ExtractionManager {
   private views = new Map<string, BrowserView>();
   private regionBounds = new Map<string, ViewBounds>();
+  /** Active did-navigate listeners for login detection (E-21, #275). */
+  private loginListeners = new Map<string, (...args: unknown[]) => void>();
 
   constructor(private mainWindow: BrowserWindow) {}
 
@@ -99,8 +109,12 @@ export class ExtractionManager {
   /**
    * Run the registered ExtractionScript against the current page of the view.
    * Returns null (does NOT throw) if the page is unrecognized (P5 graceful degradation).
+   * @param onProgress — Optional callback for per-field progress events (E-19, #273).
    */
-  async extractFromView(platformId: string): Promise<RawPlatformData | null> {
+  async extractFromView(
+    platformId: string,
+    onProgress?: ExtractionProgressCallback,
+  ): Promise<RawPlatformData | null> {
     const view = this.views.get(platformId);
     const script = registry.get(platformId);
 
@@ -263,7 +277,12 @@ export class ExtractionManager {
 
         emitter.progressEvent(platformId, 'Page loaded, extracting data...', 'page-load');
 
-        const data = await this.extractFromView(platformId);
+        // E-19 (#273): Wire onProgress callback to forward events via IPC
+        const onProgress: ExtractionProgressCallback = (event) => {
+          emitter.progressEvent(platformId, `${event.field}: ${event.value ?? event.status}`, event.field);
+        };
+
+        const data = await this.extractFromView(platformId, onProgress);
         results.set(platformId, data);
 
         if (data) {
@@ -292,8 +311,11 @@ export class ExtractionManager {
     }
 
     // Auth-required platforms remain in needs-login until user authenticates
-    // (handled by IPC events and UI toggle in future tasks)
+    // (E-21, #275): Watch for login/post-login URL changes
     for (const platformId of authPlatforms) {
+      this.openView(platformId);
+      this.watchForLogin(platformId, emitter);
+      this.hideView(platformId);
       results.set(platformId, null);
     }
 
@@ -310,5 +332,54 @@ export class ExtractionManager {
       width: bounds.width,
       height: halfHeight,
     });
+  }
+
+  /**
+   * Check whether a URL matches login/auth page patterns (E-21, #275).
+   * PRD §5.5: Simple URL heuristic for auto-login detection.
+   */
+  private isLoginUrl(url: string): boolean {
+    const lower = url.toLowerCase();
+    return LOGIN_URL_PATTERNS.some((pattern) => lower.includes(pattern));
+  }
+
+  /**
+   * Attach a did-navigate listener for login detection on a platform (E-21, #275).
+   * When the view navigates to a login URL → sets needs-login status.
+   * When the view navigates away from a login URL → sets queued status.
+   */
+  watchForLogin(platformId: string, emitter: ExtractionEventEmitter): void {
+    const view = this.views.get(platformId);
+    if (!view) return;
+
+    // Remove any existing listener for this platform
+    this.unwatchLogin(platformId);
+
+    let wasLoginPage = this.isLoginUrl(view.webContents.getURL());
+
+    const listener = (_event: unknown, url: string): void => {
+      const isLogin = this.isLoginUrl(url);
+      if (isLogin && !wasLoginPage) {
+        emitter.pipelineUpdate(platformId, { status: 'needs-login' });
+      } else if (!isLogin && wasLoginPage) {
+        emitter.pipelineUpdate(platformId, { status: 'queued' });
+      }
+      wasLoginPage = isLogin;
+    };
+
+    view.webContents.on('did-navigate', listener as (...args: unknown[]) => void);
+    view.webContents.on('did-navigate-in-page', listener as (...args: unknown[]) => void);
+    this.loginListeners.set(platformId, listener as (...args: unknown[]) => void);
+  }
+
+  /** Remove login detection listener for a platform (E-21, #275). */
+  unwatchLogin(platformId: string): void {
+    const view = this.views.get(platformId);
+    const listener = this.loginListeners.get(platformId);
+    if (view && listener) {
+      view.webContents.removeListener('did-navigate', listener);
+      view.webContents.removeListener('did-navigate-in-page', listener);
+    }
+    this.loginListeners.delete(platformId);
   }
 }

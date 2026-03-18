@@ -13,13 +13,14 @@
  * Closes #239
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useWizardStore } from '../../store/wizardStore.js';
 import { useExtractionStore } from '../../store/extractionStore.js';
 import { MARKET_CONFIGS } from '../../config/markets.js';
 import TaskPipeline from './TaskPipeline.js';
 import PlatformTabPanel from './PlatformTabPanel.js';
 import AutoTransitionBanner from './AutoTransitionBanner.js';
+import AdvancedPreferencesDrawer from '../wizard/AdvancedPreferencesDrawer.js';
 
 export default function ExtractionDashboard(): React.ReactElement {
   const market = useWizardStore((s) => s.market);
@@ -27,6 +28,7 @@ export default function ExtractionDashboard(): React.ReactElement {
   const canAnalyze = useExtractionStore((s) => s.canAnalyze);
   const allDone = useExtractionStore((s) => s.allDone);
   const cancel = useExtractionStore((s) => s.cancel);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   function handleCancel(): void {
     cancel();
@@ -87,6 +89,7 @@ export default function ExtractionDashboard(): React.ReactElement {
         <button
           data-testid="gear-icon"
           aria-label="Settings"
+          onClick={() => setDrawerOpen(true)}
           style={{
             background: 'none',
             border: 'none',
@@ -152,6 +155,9 @@ export default function ExtractionDashboard(): React.ReactElement {
           Analyze Now
         </button>
       </div>
+
+      {/* ── Advanced Preferences Drawer (W-15, #269) ─────────── */}
+      <AdvancedPreferencesDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
     </div>
   );
 }
