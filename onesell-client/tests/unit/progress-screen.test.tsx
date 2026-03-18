@@ -49,65 +49,81 @@ import ProgressScreen from '../../src/renderer/modules/progress/ProgressScreen.j
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
+/** Create a PipelineTask-compatible object for test setup. */
+function makeTask(platformId: string, status: string, productCount = 0, errorMessage?: string) {
+  return {
+    platformId,
+    status: status as 'queued' | 'done' | 'error' | 'extracting' | 'waiting',
+    label: `Scanning ${platformId}…`,
+    doneLabel: '',
+    productCount,
+    enabled: true,
+    requiresAuth: false,
+    progressEvents: [],
+    ...(errorMessage ? { errorMessage } : {}),
+  };
+}
+
 function resetStores(): void {
   useExtractionStore.setState({
-    platforms: [],
+    tasks: [],
     cancelled: false,
     allDone: false,
+    canAnalyze: false,
+    activeTab: null,
   });
   useWizardStore.setState({
-    currentStep: 8,
+    currentStep: 2,
     market: null,
     preferences: {},
-    selectedPlatforms: [],
+    hasProfile: false,
   });
 }
 
 function setAllError(platformIds: string[]): void {
   useExtractionStore.setState({
-    platforms: platformIds.map((id) => ({
-      platformId: id,
-      status: 'error' as const,
-      productCount: 0,
-      errorMessage: 'Extraction failed',
-    })),
+    tasks: platformIds.map((id) => makeTask(id, 'error', 0, 'Extraction failed')),
     cancelled: false,
     allDone: true,
+    canAnalyze: false,
   });
 }
 
 function setPartialSuccess(): void {
   useExtractionStore.setState({
-    platforms: [
-      { platformId: 'amazon-us', status: 'done', productCount: 42 },
-      { platformId: 'ebay-us', status: 'error', productCount: 0, errorMessage: 'Extraction failed' },
-      { platformId: 'etsy', status: 'done', productCount: 15 },
+    tasks: [
+      makeTask('amazon-us', 'done', 42),
+      makeTask('ebay-us', 'error', 0, 'Extraction failed'),
+      makeTask('etsy', 'done', 15),
     ],
     cancelled: false,
     allDone: true,
+    canAnalyze: true,
   });
 }
 
 function setAllDone(): void {
   useExtractionStore.setState({
-    platforms: [
-      { platformId: 'amazon-us', status: 'done', productCount: 42 },
-      { platformId: 'ebay-us', status: 'done', productCount: 18 },
+    tasks: [
+      makeTask('amazon-us', 'done', 42),
+      makeTask('ebay-us', 'done', 18),
     ],
     cancelled: false,
     allDone: true,
+    canAnalyze: true,
   });
 }
 
 function setInProgress(): void {
   useExtractionStore.setState({
-    platforms: [
-      { platformId: 'amazon-us', status: 'done', productCount: 42 },
-      { platformId: 'ebay-us', status: 'extracting', productCount: 0 },
-      { platformId: 'etsy', status: 'waiting', productCount: 0 },
+    tasks: [
+      makeTask('amazon-us', 'done', 42),
+      makeTask('ebay-us', 'extracting'),
+      makeTask('etsy', 'waiting'),
     ],
     cancelled: false,
     allDone: false,
+    canAnalyze: true,
   });
 }
 
@@ -270,10 +286,10 @@ describe('AC 4 — Cancel behaviour', () => {
 
     // Simulate all platforms finishing after cancel
     useExtractionStore.setState({
-      platforms: [
-        { platformId: 'amazon-us', status: 'done', productCount: 42 },
-        { platformId: 'ebay-us', status: 'done', productCount: 18 },
-        { platformId: 'etsy', status: 'done', productCount: 7 },
+      tasks: [
+        makeTask('amazon-us', 'done', 42),
+        makeTask('ebay-us', 'done', 18),
+        makeTask('etsy', 'done', 7),
       ],
       allDone: true,
       cancelled: true,
@@ -297,9 +313,9 @@ describe('AC 5 — Results preserved after cancel', () => {
   it('platform product counts are preserved after cancel', () => {
     // Set up: amazon-us done, ebay-us still extracting
     useExtractionStore.setState({
-      platforms: [
-        { platformId: 'amazon-us', status: 'done', productCount: 42 },
-        { platformId: 'ebay-us', status: 'extracting', productCount: 0 },
+      tasks: [
+        makeTask('amazon-us', 'done', 42),
+        makeTask('ebay-us', 'extracting'),
       ],
       cancelled: false,
       allDone: false,
@@ -312,7 +328,7 @@ describe('AC 5 — Results preserved after cancel', () => {
 
     // Verify amazon-us results still in store
     const state = useExtractionStore.getState();
-    const amazon = state.platforms.find((p) => p.platformId === 'amazon-us');
+    const amazon = state.tasks.find((p) => p.platformId === 'amazon-us');
     expect(amazon?.status).toBe('done');
     expect(amazon?.productCount).toBe(42);
   });
@@ -321,10 +337,10 @@ describe('AC 5 — Results preserved after cancel', () => {
     setInProgress();
     render(<ProgressScreen />);
 
-    const beforeCount = useExtractionStore.getState().platforms.length;
+    const beforeCount = useExtractionStore.getState().tasks.length;
     fireEvent.click(screen.getByRole('button', { name: /cancel/i }));
 
-    expect(useExtractionStore.getState().platforms).toHaveLength(beforeCount);
+    expect(useExtractionStore.getState().tasks).toHaveLength(beforeCount);
   });
 });
 
@@ -376,9 +392,7 @@ describe('AC 7 — Spinner is CSS-only', () => {
   it('extracting status indicator uses CSS animation property', () => {
     // Set one platform to extracting so the spinner renders
     useExtractionStore.setState({
-      platforms: [
-        { platformId: 'amazon-us', status: 'extracting', productCount: 0 },
-      ],
+      tasks: [makeTask('amazon-us', 'extracting')],
       cancelled: false,
       allDone: false,
     });
@@ -419,13 +433,14 @@ describe('AC 8 / P5 — Partial degradation allows analysis', () => {
   it('platforms with error do not block the Analyze Now button', () => {
     // 1 success + 2 errors — still partially useful data
     useExtractionStore.setState({
-      platforms: [
-        { platformId: 'amazon-us', status: 'done', productCount: 5 },
-        { platformId: 'ebay-us', status: 'error', productCount: 0, errorMessage: 'fail' },
-        { platformId: 'etsy', status: 'error', productCount: 0, errorMessage: 'fail' },
+      tasks: [
+        makeTask('amazon-us', 'done', 5),
+        makeTask('ebay-us', 'error', 0, 'fail'),
+        makeTask('etsy', 'error', 0, 'fail'),
       ],
       cancelled: false,
       allDone: true,
+      canAnalyze: true,
     });
 
     render(<ProgressScreen />);
@@ -443,9 +458,7 @@ describe('Rendering — status indicators', () => {
 
   it('waiting platforms show "Waiting" text', () => {
     useExtractionStore.setState({
-      platforms: [
-        { platformId: 'amazon-us', status: 'waiting', productCount: 0 },
-      ],
+      tasks: [makeTask('amazon-us', 'waiting')],
       cancelled: false,
       allDone: false,
     });

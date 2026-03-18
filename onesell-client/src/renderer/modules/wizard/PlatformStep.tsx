@@ -3,57 +3,41 @@ import { useTranslation } from '../../i18n/index.js';
 import { useWizardStore } from '../../store/wizardStore.js';
 import { MARKET_CONFIGS } from '../../config/markets.js';
 
+/**
+ * @deprecated v1 PlatformStep — will be removed in v2 (ADR-005 D1).
+ * Platforms are now auto-selected from MARKET_CONFIGS[marketId].
+ */
 export default function PlatformStep(): React.ReactElement {
   const { t } = useTranslation();
-  const { market, selectedPlatforms, setSelectedPlatforms } = useWizardStore();
+  const { market } = useWizardStore();
 
   const marketId = market?.marketId ?? 'us';
   const config = MARKET_CONFIGS[marketId];
   const platforms = config?.platforms ?? [];
 
-  function togglePlatform(platformId: string): void {
-    if (selectedPlatforms.includes(platformId)) {
-      setSelectedPlatforms(selectedPlatforms.filter((p) => p !== platformId));
-    } else {
-      setSelectedPlatforms([...selectedPlatforms, platformId]);
-    }
-  }
-
   return (
     <div>
       <h2 style={{ marginBottom: '24px' }}>{t('wizard.platforms')}</h2>
+      <p style={{ marginBottom: '16px', color: '#666' }}>Platforms are auto-selected for your market.</p>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '12px' }}>
-        {platforms.map((platformId) => {
-          const isChecked = selectedPlatforms.includes(platformId);
-          return (
-            <label
-              key={platformId}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px',
-                padding: '14px',
-                border: `2px solid ${isChecked ? '#0066cc' : '#e0e0e0'}`,
-                borderRadius: '8px',
-                background: isChecked ? '#e8f0fe' : '#fff',
-                cursor: 'pointer',
-                fontSize: '15px',
-              }}
-            >
-              <input
-                type="checkbox"
-                checked={isChecked}
-                onChange={() => togglePlatform(platformId)}
-                style={{ accentColor: '#0066cc', width: '18px', height: '18px' }}
-              />
-              {t(`platforms.${platformId}` as never, { defaultValue: platformId })}
-            </label>
-          );
-        })}
+        {platforms.map((platformId) => (
+          <div
+            key={platformId}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              padding: '14px',
+              border: '2px solid #0066cc',
+              borderRadius: '8px',
+              background: '#e8f0fe',
+              fontSize: '15px',
+            }}
+          >
+            {t(`platforms.${platformId}` as never, { defaultValue: platformId })}
+          </div>
+        ))}
       </div>
-      {selectedPlatforms.length === 0 && (
-        <p style={{ color: '#cc0000', marginTop: '12px', fontSize: '14px' }}>Please select at least one platform.</p>
-      )}
     </div>
   );
 }

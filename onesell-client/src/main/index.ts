@@ -4,13 +4,37 @@ import os from 'os';
 import { ExtractionManager } from './extraction/ExtractionManager.js';
 import { PayloadBuilder } from './extraction/PayloadBuilder.js';
 import { registerIpcHandlers } from './ipc/handlers.js';
+import { LocalStore } from './store/LocalStore.js';
+import { ApiKeyManager } from './store/ApiKeyManager.js';
 // Import extraction scripts so they self-register with the registry on startup
+// M1 — US platform scripts
 import './extraction/scripts/amazon-us/index.js';
 import './extraction/scripts/google-trends/index.js';
 import './extraction/scripts/alibaba/index.js';
 import './extraction/scripts/ebay-us/index.js';
 import './extraction/scripts/etsy/index.js';
 import './extraction/scripts/tiktok-shop-us/index.js';
+// M4 — China platform scripts
+import './extraction/scripts/taobao/index.js';
+import './extraction/scripts/jd/index.js';
+import './extraction/scripts/pinduoduo/index.js';
+import './extraction/scripts/douyin-shop/index.js';
+import './extraction/scripts/kuaishou-shop/index.js';
+import './extraction/scripts/xiaohongshu/index.js';
+import './extraction/scripts/1688/index.js';
+import './extraction/scripts/baidu-index/index.js';
+// M6 — Regional platform scripts
+import './extraction/scripts/shopee/index.js';
+import './extraction/scripts/tokopedia/index.js';
+import './extraction/scripts/lazada/index.js';
+import './extraction/scripts/tiktok-shop-sea/index.js';
+import './extraction/scripts/amazon-uk/index.js';
+import './extraction/scripts/amazon-de/index.js';
+import './extraction/scripts/amazon-jp/index.js';
+import './extraction/scripts/rakuten/index.js';
+import './extraction/scripts/mercari-jp/index.js';
+import './extraction/scripts/amazon-au/index.js';
+import './extraction/scripts/ebay-regional/index.js';
 
 const isDev = process.env['NODE_ENV'] === 'development';
 
@@ -81,7 +105,13 @@ app.whenReady().then(() => {
 
   const manager = new ExtractionManager(win);
   const payloadBuilder = new PayloadBuilder();
-  registerIpcHandlers(win, manager, payloadBuilder);
+  const localStore = new LocalStore();
+  const apiKeyManager = new ApiKeyManager();
+
+  // Initialize async stores before registering IPC handlers
+  void Promise.all([localStore.ready(), apiKeyManager.ready()]).then(() => {
+    registerIpcHandlers(win, manager, payloadBuilder, undefined, localStore, apiKeyManager);
+  });
 
   win.on('closed', () => {
     manager.destroyAll();

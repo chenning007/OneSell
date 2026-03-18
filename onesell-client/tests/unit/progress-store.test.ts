@@ -1,3 +1,8 @@
+/**
+ * extractionStore v2 tests — PipelineTask[] model (E-01, #237).
+ * Updated from v1 tests to match the new API.
+ */
+
 import { describe, it, expect, beforeEach } from 'vitest';
 import { useExtractionStore } from '../../src/renderer/store/extractionStore.js';
 
@@ -6,82 +11,98 @@ describe('extractionStore', () => {
     useExtractionStore.getState().reset();
   });
 
-  it('initPlatforms creates entries for each platform in "waiting" state', () => {
-    const { initPlatforms } = useExtractionStore.getState();
-    initPlatforms(['amazon-us', 'ebay-us', 'etsy']);
+  it('initPipeline creates PipelineTask entries from MARKET_CONFIGS', () => {
+    useExtractionStore.getState().initPipeline('us');
 
-    const { platforms } = useExtractionStore.getState();
-    expect(platforms).toHaveLength(3);
-    for (const p of platforms) {
-      expect(p.status).toBe('waiting');
-      expect(p.productCount).toBe(0);
-      expect(p.errorMessage).toBeUndefined();
+    const { tasks } = useExtractionStore.getState();
+    expect(tasks.length).toBeGreaterThan(0);
+    for (const t of tasks) {
+      expect(t.productCount).toBe(0);
+      expect(t.enabled).toBe(true);
+      expect(['queued', 'needs-login']).toContain(t.status);
     }
-    expect(platforms.map((p) => p.platformId)).toEqual(['amazon-us', 'ebay-us', 'etsy']);
+    expect(tasks.map((t) => t.platformId)).toContain('amazon-us');
   });
 
-  it('setStatus transitions status correctly', () => {
-    useExtractionStore.getState().initPlatforms(['amazon-us']);
-    const { setStatus } = useExtractionStore.getState();
-
-    setStatus('amazon-us', 'extracting');
-    expect(useExtractionStore.getState().platforms[0]!.status).toBe('extracting');
-
-    setStatus('amazon-us', 'done', 42);
-    const p = useExtractionStore.getState().platforms[0]!;
-    expect(p.status).toBe('done');
-    expect(p.productCount).toBe(42);
+  it('initPipeline with unknown marketId creates empty task list', () => {
+    useExtractionStore.getState().initPipeline('nonexistent');
+    expect(useExtractionStore.getState().tasks).toEqual([]);
   });
 
-  it('setStatus records error message on error transition', () => {
-    useExtractionStore.getState().initPlatforms(['ebay-us']);
-    useExtractionStore.getState().setStatus('ebay-us', 'error', 0, 'Extraction failed');
+  it('updateTask merges partial state into the correct task', () => {
+    useExtractionStore.getState().initPipeline('us');
+    useExtractionStore.getState().updateTask('amazon-us', { status: 'active' });
+    const task = useExtractionStore.getState().tasks.find((t) => t.platformId === 'amazon-us')!;
+    expect(task.status).toBe('active');
 
-    const p = useExtractionStore.getState().platforms[0]!;
-    expect(p.status).toBe('error');
-    expect(p.errorMessage).toBe('Extraction failed');
+    useExtractionStore.getState().updateTask('amazon-us', { status: 'done', productCount: 42, doneLabel: 'Found 42 products' });
+    const updated = useExtractionStore.getState().tasks.find((t) => t.platformId === 'amazon-us')!;
+    expect(updated.status).toBe('done');
+    expect(updated.productCount).toBe(42);
+    expect(updated.doneLabel).toBe('Found 42 products');
+  });
+
+  it('canAnalyze is true when >= 1 task is done', () => {
+    useExtractionStore.getState().initPipeline('us');
+    expect(useExtractionStore.getState().canAnalyze).toBe(false);
+
+    useExtractionStore.getState().updateTask('amazon-us', { status: 'done', productCount: 5 });
+    expect(useExtractionStore.getState().canAnalyze).toBe(true);
+  });
+
+  it('allDone is true when all enabled tasks are done/skipped/error', () => {
+    useExtractionStore.getState().initPipeline('us');
+    const { tasks } = useExtractionStore.getState();
+    expect(useExtractionStore.getState().allDone).toBe(false);
+
+    for (const t of tasks) {
+      useExtractionStore.getState().updateTask(t.platformId, { status: 'done', productCount: 1 });
+    }
+    expect(useExtractionStore.getState().allDone).toBe(true);
+  });
+
+  it('allDone is false when some enabled tasks are still queued', () => {
+    useExtractionStore.getState().initPipeline('us');
+    const firstTask = useExtractionStore.getState().tasks[0]!;
+    useExtractionStore.getState().updateTask(firstTask.platformId, { status: 'done', productCount: 3 });
+    expect(useExtractionStore.getState().allDone).toBe(false);
   });
 
   it('cancel sets cancelled flag', () => {
-    useExtractionStore.getState().initPlatforms(['amazon-us']);
+    useExtractionStore.getState().initPipeline('us');
     expect(useExtractionStore.getState().cancelled).toBe(false);
-
     useExtractionStore.getState().cancel();
     expect(useExtractionStore.getState().cancelled).toBe(true);
   });
 
   it('reset restores initial state', () => {
-    useExtractionStore.getState().initPlatforms(['amazon-us', 'ebay-us']);
-    useExtractionStore.getState().setStatus('amazon-us', 'done', 10);
+    useExtractionStore.getState().initPipeline('us');
+    useExtractionStore.getState().updateTask('amazon-us', { status: 'done', productCount: 10 });
     useExtractionStore.getState().cancel();
 
     useExtractionStore.getState().reset();
     const state = useExtractionStore.getState();
-    expect(state.platforms).toEqual([]);
+    expect(state.tasks).toEqual([]);
     expect(state.cancelled).toBe(false);
     expect(state.allDone).toBe(false);
+    expect(state.canAnalyze).toBe(false);
   });
 
-  it('allDone is true only when all platforms are done or error', () => {
-    useExtractionStore.getState().initPlatforms(['amazon-us', 'ebay-us']);
-    expect(useExtractionStore.getState().allDone).toBe(false);
-
-    useExtractionStore.getState().setStatus('amazon-us', 'done', 5);
-    expect(useExtractionStore.getState().allDone).toBe(false);
-
-    useExtractionStore.getState().setStatus('ebay-us', 'error', 0, 'failed');
-    expect(useExtractionStore.getState().allDone).toBe(true);
-  });
-
-  it('allDone is false for empty platforms list', () => {
-    // After reset, platforms is empty — allDone should remain false
+  it('allDone is false for empty task list', () => {
     expect(useExtractionStore.getState().allDone).toBe(false);
   });
 
-  it('allDone is false when some platforms are still waiting', () => {
-    useExtractionStore.getState().initPlatforms(['amazon-us', 'ebay-us', 'etsy']);
-    useExtractionStore.getState().setStatus('amazon-us', 'done', 3);
-    // ebay-us and etsy still 'waiting'
-    expect(useExtractionStore.getState().allDone).toBe(false);
+  it('auth-required platforms start with needs-login status', () => {
+    useExtractionStore.getState().initPipeline('us');
+    const amazonTask = useExtractionStore.getState().tasks.find((t) => t.platformId === 'amazon-us')!;
+    expect(amazonTask.status).toBe('needs-login');
+    expect(amazonTask.requiresAuth).toBe(true);
+  });
+
+  it('public platforms start with queued status', () => {
+    useExtractionStore.getState().initPipeline('us');
+    const googleTask = useExtractionStore.getState().tasks.find((t) => t.platformId === 'google-trends')!;
+    expect(googleTask.status).toBe('queued');
+    expect(googleTask.requiresAuth).toBe(false);
   });
 });

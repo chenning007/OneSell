@@ -1,6 +1,31 @@
 import { BrowserView, BrowserWindow, session } from 'electron';
 import type { RawPlatformData } from '../../shared/types/ExtractionScript.js';
 import { registry } from './ExtractionScriptRegistry.js';
+import { MARKET_CONFIGS } from '../../renderer/config/markets.js';
+
+/** Bounds rectangle for attaching a BrowserView to a region. */
+export interface ViewBounds {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
+/** Callback for emitting pipeline/progress IPC events. */
+export interface ExtractionEventEmitter {
+  pipelineUpdate(platformId: string, update: Record<string, unknown>): void;
+  progressEvent(platformId: string, message: string, field?: string): void;
+}
+
+/** Platforms that require user authentication before extraction. */
+const AUTH_REQUIRED_PLATFORMS: ReadonlySet<string> = new Set([
+  'amazon-us', 'amazon-uk', 'amazon-de', 'amazon-jp', 'amazon-au',
+  'ebay-us', 'ebay-uk', 'ebay-de', 'ebay-au',
+  'etsy', 'otto', 'catch',
+  'taobao', 'jd', 'pinduoduo', 'douyin-shop',
+  'shopee', 'tokopedia', 'lazada',
+  'rakuten', 'mercari-jp',
+]);
 
 /**
  * ExtractionManager — manages BrowserView lifecycle per platform.
@@ -9,9 +34,14 @@ import { registry } from './ExtractionScriptRegistry.js';
  * (persist:platformId partition) so cookies/credentials never leave the client (P1).
  * ExtractionManager does not know platform internals — it delegates to registry (P6).
  * Graceful degradation: extractFromView returns null for unrecognized pages (P5).
+ *
+ * v2 additions (E-13, #249):
+ * - attachToRegion(platformId, bounds): positions BrowserView within given bounds
+ * - startAutonomousExtraction(marketId, emitter): orchestrates extraction sequence
  */
 export class ExtractionManager {
   private views = new Map<string, BrowserView>();
+  private regionBounds = new Map<string, ViewBounds>();
 
   constructor(private mainWindow: BrowserWindow) {}
 
@@ -162,6 +192,112 @@ export class ExtractionManager {
     for (const [platformId] of this.views) {
       this.closeView(platformId);
     }
+  }
+
+  /**
+   * Position BrowserView within given bounds (for tab panel area).
+   * v2 (E-13): replaces full-window overlay with region-specific positioning.
+   */
+  attachToRegion(platformId: string, bounds: ViewBounds): void {
+    this.regionBounds.set(platformId, bounds);
+    const view = this.views.get(platformId);
+    if (view) {
+      view.setBounds({
+        x: Math.round(bounds.x),
+        y: Math.round(bounds.y),
+        width: Math.round(bounds.w),
+        height: Math.round(bounds.h),
+      });
+    }
+  }
+
+  /**
+   * Orchestrate autonomous extraction for all platforms in a market.
+   * v2 (E-13): public-first, queue auth-required, sequential execution.
+   * Emits pipeline-update and progress-event IPC events via the provided emitter.
+   * Handles partial failures gracefully — one platform error doesn't stop others (P5).
+   */
+  async startAutonomousExtraction(
+    marketId: string,
+    emitter: ExtractionEventEmitter,
+  ): Promise<Map<string, RawPlatformData | null>> {
+    const config = MARKET_CONFIGS[marketId];
+    if (!config) {
+      console.error(`[ExtractionManager] Unknown market: ${marketId}`);
+      return new Map();
+    }
+
+    const platforms = config.platforms;
+    const results = new Map<string, RawPlatformData | null>();
+
+    // Separate public and auth-required platforms
+    const publicPlatforms = platforms.filter((p) => !AUTH_REQUIRED_PLATFORMS.has(p));
+    const authPlatforms = platforms.filter((p) => AUTH_REQUIRED_PLATFORMS.has(p));
+
+    // Queue auth-required platforms as needs-login
+    for (const platformId of authPlatforms) {
+      emitter.pipelineUpdate(platformId, { status: 'needs-login' });
+    }
+
+    // Run public platforms sequentially (avoids resource contention)
+    for (const platformId of publicPlatforms) {
+      emitter.pipelineUpdate(platformId, { status: 'active' });
+      emitter.progressEvent(platformId, `Starting extraction for ${platformId}`);
+
+      try {
+        this.openView(platformId);
+
+        // Wait for page load
+        const view = this.views.get(platformId);
+        if (view) {
+          await new Promise<void>((resolve) => {
+            const onFinish = (): void => { resolve(); };
+            view.webContents.once('did-finish-load', onFinish);
+            // Timeout: don't wait forever
+            setTimeout(() => {
+              view.webContents.removeListener('did-finish-load', onFinish);
+              resolve();
+            }, 15_000);
+          });
+        }
+
+        emitter.progressEvent(platformId, 'Page loaded, extracting data...', 'page-load');
+
+        const data = await this.extractFromView(platformId);
+        results.set(platformId, data);
+
+        if (data) {
+          const listings = Array.isArray((data.data as Record<string, unknown>)['listings'])
+            ? ((data.data as Record<string, unknown>)['listings'] as unknown[]).length
+            : 0;
+          emitter.pipelineUpdate(platformId, {
+            status: 'done',
+            productCount: listings,
+            doneLabel: `Scanned ${platformId}`,
+          });
+          emitter.progressEvent(platformId, `Extraction complete — ${listings} products found`, 'complete');
+        } else {
+          emitter.pipelineUpdate(platformId, { status: 'done', productCount: 0, doneLabel: `Scanned ${platformId}` });
+          emitter.progressEvent(platformId, 'Extraction returned no data', 'complete');
+        }
+      } catch (err) {
+        // P5: Graceful degradation — log error, mark platform as failed, continue
+        console.error(`[ExtractionManager] Extraction error for ${platformId}:`, err);
+        results.set(platformId, null);
+        emitter.pipelineUpdate(platformId, { status: 'error' });
+        emitter.progressEvent(platformId, `Error: ${err instanceof Error ? err.message : String(err)}`, 'error');
+      }
+
+      this.hideView(platformId);
+    }
+
+    // Auth-required platforms remain in needs-login until user authenticates
+    // (handled by IPC events and UI toggle in future tasks)
+    for (const platformId of authPlatforms) {
+      results.set(platformId, null);
+    }
+
+    return results;
   }
 
   /** Size the view to the bottom half of the main window. */

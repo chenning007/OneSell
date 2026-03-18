@@ -2,16 +2,23 @@ import type { MarketContext } from './MarketContext.js';
 import type { NormalizedPlatformData } from './ExtractionScript.js';
 
 /**
- * UserPreferences — collected by the 6-step wizard.
- * See docs/PRD §5 for the full wizard step definitions.
+ * UserPreferences — collected by the 1-step wizard (v2).
+ *
+ * v2 changes (PRD §3.3, ADR-005 D1):
+ * - Removed `targetPlatforms`: platforms are auto-selected from MARKET_CONFIGS[marketId]
+ * - Removed `categories`: agent explores all categories autonomously
+ * - Added optional `productType` (default: 'physical')
+ * - Added optional `fulfillmentTime` (default: 'medium' = 5–15 h/week)
  */
 export interface UserPreferences {
   readonly market: MarketContext;
   readonly budget: { readonly min: number; readonly max: number; readonly currency: string };
   readonly riskTolerance: 'low' | 'medium' | 'high';
-  readonly targetPlatforms: readonly string[];
-  readonly categories: readonly string[];     // User-selected interest categories
   readonly sellerExperience: 'none' | 'some' | 'experienced';
+  /** Default: 'physical'. Moved from wizard step 4 to Advanced Preferences. */
+  readonly productType?: 'physical' | 'digital';
+  /** Default: 'medium' (5–15 h/week). Moved from wizard step 6 to Advanced Preferences. */
+  readonly fulfillmentTime?: 'low' | 'medium' | 'high';
 }
 
 /**

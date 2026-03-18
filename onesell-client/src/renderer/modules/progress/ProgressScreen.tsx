@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useExtractionStore } from '../../store/extractionStore.js';
 import { useWizardStore } from '../../store/wizardStore.js';
 import { useExtractionRunner } from './useExtractionRunner.js';
-import type { PlatformStatus } from '../../store/extractionStore.js';
+import type { PipelineStatus } from '../../store/extractionStore.js';
 
 const spinnerKeyframes = `
 @keyframes onesell-spin {
@@ -17,7 +17,7 @@ const spinnerKeyframes = `
 `;
 
 function StatusIndicator({ status, productCount, errorMessage }: {
-  status: PlatformStatus;
+  status: PipelineStatus;
   productCount: number;
   errorMessage?: string;
 }): React.ReactElement {
@@ -69,17 +69,19 @@ function StatusIndicator({ status, productCount, errorMessage }: {
   );
 }
 
+/** @deprecated v1 ProgressScreen — will be replaced by ExtractionDashboard in v2. */
 export default function ProgressScreen(): React.ReactElement {
   const { t } = useTranslation();
-  const { platforms, cancelled, allDone, cancel } = useExtractionStore();
-  const { selectedPlatforms, setStep } = useWizardStore();
+  const { tasks, cancelled, allDone, cancel } = useExtractionStore();
+  const { market, setStep } = useWizardStore();
 
-  // Start the extraction runner
-  useExtractionRunner(selectedPlatforms);
+  // v2: derive platform list from market config, not wizard state
+  const platformIds = market?.platforms as string[] ?? [];
+  useExtractionRunner(platformIds);
 
   // BUG-B fix: require at least one successful platform for Analyze Now
-  const hasAnySuccess = platforms.some((p) => p.status === 'done');
-  const allErrored = allDone && !hasAnySuccess && platforms.length > 0;
+  const hasAnySuccess = tasks.some((p) => p.status === 'done');
+  const allErrored = allDone && !hasAnySuccess && tasks.length > 0;
   const analyzeEnabled = allDone && !cancelled && hasAnySuccess;
 
   function handleCancel(): void {
@@ -118,7 +120,7 @@ export default function ProgressScreen(): React.ReactElement {
 
         {/* BUG-E fix: aria-live region wraps status section */}
         <div aria-live="polite" style={{ display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 40 }}>
-          {platforms.map((p) => (
+          {tasks.map((p) => (
             <div key={p.platformId} style={{
               display: 'flex',
               alignItems: 'center',

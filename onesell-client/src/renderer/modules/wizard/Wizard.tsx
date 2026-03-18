@@ -7,8 +7,9 @@ import ProductTypeStep from './ProductTypeStep.js';
 import CategoriesStep from './CategoriesStep.js';
 import FulfillmentStep from './FulfillmentStep.js';
 
+/** @deprecated v1 Wizard — will be removed in v2 (ADR-005 D1). */
 export default function Wizard(): React.ReactElement {
-  const { currentStep, selectedPlatforms, setStep, updatePreferences } = useWizardStore();
+  const { currentStep, setStep, updatePreferences } = useWizardStore();
 
   function handleNext(): void {
     setStep(currentStep + 1);
@@ -36,9 +37,10 @@ export default function Wizard(): React.ReactElement {
     6: <FulfillmentStep />,
   };
 
-  const canNext = currentStep === 3 ? selectedPlatforms.length > 0 : true;
+  // v2: platforms are auto-selected; canNext is always true for step 3
+  const canNext = true;
   const isLastStep = currentStep === 6;
-  const showSkip = currentStep !== 3; // Platform step requires at least 1
+  const showSkip = currentStep !== 3;
 
   return (
     <WizardLayout

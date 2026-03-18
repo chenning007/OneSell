@@ -29,7 +29,7 @@ describe('Contract: MarketContext Immutability (P4)', () => {
 
   it('wizard store setMarket replaces the entire market (not mutation)', () => {
     const store = useWizardStore;
-    store.setState({ market: usMarket, currentStep: 1, preferences: {}, selectedPlatforms: [] });
+    store.setState({ market: usMarket, currentStep: 1, preferences: {}, hasProfile: false });
     expect(store.getState().market).toEqual(usMarket);
 
     store.getState().setMarket(cnMarket);

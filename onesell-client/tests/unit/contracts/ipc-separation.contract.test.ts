@@ -54,8 +54,12 @@ describe('Contract: Client/Backend Separation (P2)', () => {
     }
   });
 
-  it('no client source file references agent tool functions', () => {
-    const allFiles = [...getAllTsFiles(mainDir), ...getAllTsFiles(rendererDir)];
+  it('no client source file (outside main/agent/) references agent tool functions', () => {
+    // ADR-005: agent code is intentionally in main/agent/ for client-only architecture.
+    // This test ensures agent logic doesn't leak into renderer or IPC layers.
+    const agentDir = path.join(mainDir, 'agent');
+    const allFiles = [...getAllTsFiles(mainDir), ...getAllTsFiles(rendererDir)]
+      .filter((f) => !f.startsWith(agentDir));
     for (const file of allFiles) {
       const content = fs.readFileSync(file, 'utf-8');
       for (const pattern of BANNED_ANALYSIS_PATTERNS) {
@@ -68,12 +72,13 @@ describe('Contract: Client/Backend Separation (P2)', () => {
     }
   });
 
-  it('IPC handlers only delegate to ExtractionManager and PayloadBuilder', () => {
+  it('IPC handlers delegate to ExtractionManager, PayloadBuilder, and AgentService', () => {
     const handlersFile = path.join(mainDir, 'ipc', 'handlers.ts');
     const content = fs.readFileSync(handlersFile, 'utf-8');
-    // Should import ExtractionManager and PayloadBuilder — not agent services
+    // v2: handlers delegate to ExtractionManager, PayloadBuilder, and AgentService (agent moved client-side)
     expect(content).toContain('ExtractionManager');
-    expect(content).not.toContain('AgentService');
+    // AgentService is allowed in v2 (agent runs in main process per ADR-005 D4)
+    // ToolRegistry should not be directly referenced in handlers
     expect(content).not.toContain('ToolRegistry');
   });
 });

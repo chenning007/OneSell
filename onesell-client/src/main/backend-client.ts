@@ -53,7 +53,7 @@ export interface AnalysisStatusResponse {
 
 export interface AnalysisResultsResponse {
   analysisId: string;
-  results: unknown;
+  results?: unknown;
 }
 
 export interface BackendClientOptions {
