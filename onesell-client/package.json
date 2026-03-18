@@ -4,6 +4,10 @@
   "private": true,
   "description": "OneSell Scout — Electron Desktop Client",
   "author": "OneSell Team",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/chenning007/OneSell.git"
+  },
   "main": "dist/main/main/index.js",
   "scripts": {
     "dev": "vite",

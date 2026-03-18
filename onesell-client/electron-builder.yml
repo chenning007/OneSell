@@ -29,3 +29,8 @@ mac:
 nsis:
   oneClick: false
   allowToChangeInstallationDirectory: true
+
+publish:
+  provider: github
+  owner: chenning007
+  repo: OneSell
