@@ -1,6 +1,7 @@
 appId: com.onesell.scout
 productName: OneSell Scout
 copyright: Copyright © 2026 OneSell
+electronVersion: 32.3.3
 
 directories:
   output: dist/electron
