@@ -88,14 +88,14 @@ function createWindow(): BrowserWindow {
   if (isDev) {
     // Development: load from Vite dev server (hot-reload)
     void win.loadURL('http://localhost:5173');
-    win.webContents.openDevTools();
+    if (process.env['SHOW_DEVTOOLS'] === 'true') {
+      win.webContents.openDevTools();
+    }
   } else {
     // Production: load built renderer
     // tsc outputs to dist/main/main/ (rootDir is src, so src/main/* → dist/main/main/*),
     // while Vite outputs the renderer to dist/renderer/.
     void win.loadFile(path.join(__dirname, '../../renderer/index.html'));
-    // Open DevTools in production temporarily for debugging
-    win.webContents.openDevTools();
   }
 
   return win;

@@ -18,7 +18,8 @@
     "lint": "pnpm --filter onesell-backend lint && pnpm --filter onesell-client lint",
     "typecheck": "pnpm --filter onesell-backend typecheck && pnpm --filter onesell-client typecheck",
     "db:migrate": "pnpm --filter onesell-backend db:migrate",
-    "db:generate": "pnpm --filter onesell-backend db:generate"
+    "db:generate": "pnpm --filter onesell-backend db:generate",
+    "start": "cd onesell-client && pnpm dev"
   },
   "devDependencies": {
     "prettier": "^3.3.0",

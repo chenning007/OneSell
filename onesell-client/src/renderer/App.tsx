@@ -12,7 +12,7 @@
  * Closes #233
  */
 
-import React from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useWizardStore } from './store/wizardStore.js';
 import QuickStartScreen from './modules/wizard/QuickStartScreen.js';
 import MarketSelection from './modules/wizard/MarketSelection.js';
@@ -37,6 +37,18 @@ const SCREEN_MAP: Record<number, React.ComponentType> = {
 
 export default function App(): React.ReactElement {
   const { currentStep } = useWizardStore();
+  const [showDebug, setShowDebug] = useState(false);
+
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (e.ctrlKey && e.shiftKey && e.key === 'D') {
+      setShowDebug((prev) => !prev);
+    }
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleKeyDown]);
 
   const Screen = SCREEN_MAP[currentStep];
   const content: React.ReactElement = Screen
@@ -54,7 +66,7 @@ export default function App(): React.ReactElement {
       <div style={{ paddingBottom: '220px' }}>
         <FadeTransition key={currentStep}>{content}</FadeTransition>
       </div>
-      <DebugPanel />
+      {showDebug && <DebugPanel />}
     </>
   );
 }
