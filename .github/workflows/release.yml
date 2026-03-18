@@ -3,6 +3,11 @@ name: Build & Release
 on:
   release:
     types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to attach artifacts to (e.g. v2.1.1)'
+        required: true
 
 permissions:
   contents: write
@@ -50,6 +55,7 @@ jobs:
       - name: Upload installers to release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ github.event.inputs.tag || github.event.release.tag_name }}
           files: |
             onesell-client/dist/electron/*.exe
             onesell-client/dist/electron/*.dmg
