@@ -24,8 +24,10 @@ export interface TaskPlan {
 }
 
 export interface UserPreferences {
-  readonly budget?: number;
-  readonly riskTolerance?: 'low' | 'medium' | 'high';
+  readonly market: import('../../shared/types/MarketContext.js').MarketContext;
+  readonly budget: { readonly min: number; readonly max: number; readonly currency: string };
+  readonly riskTolerance: 'low' | 'medium' | 'high';
+  readonly sellerExperience: 'none' | 'some' | 'experienced';
   readonly fulfillmentPreference?: string;
   /** v2: productType replaces categories/targetPlatforms */
   readonly productType?: 'physical' | 'digital';
