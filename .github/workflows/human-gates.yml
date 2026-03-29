@@ -132,7 +132,7 @@ jobs:
     environment:
       name: architecture-approval
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Extract ADR title
         id: adr
