@@ -140,7 +140,7 @@ jobs:
 
       # ── Auto-assign the owner so GitHub also sends its own notification ────
       - name: Auto-assign owner
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const owner = context.repo.owner;
